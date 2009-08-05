@@ -2,7 +2,6 @@ package WebGUIx::Asset::Snippet;
 
 use Moose;
 extends qw{ DBIx::Class };
-with 'WebGUIx::AssetRole::Common';
 
 __PACKAGE__->load_components(qw{ Core });
 
@@ -14,17 +13,23 @@ __PACKAGE__->add_columns(qw{
 });
 __PACKAGE__->set_primary_key( 'assetId', 'revisionDate' );
 __PACKAGE__->belongs_to(
-    'base' => 'WebGUIx::Asset::Base',
+    'base' => 'WebGUIx::Asset::Any',
     { 
         'foreign.assetId'         => 'self.assetId',
         'foreign.revisionDate'    => 'self.revisionDate',
     }
 );
+__PACKAGE__->belongs_to(
+    'tree' => 'WebGUIx::Asset::Tree',
+    { 'foreign.assetId' => 'self.assetId' },
+);
 
+
+with 'WebGUIx::Asset::Role::Common';
+with 'WebGUIx::Asset::Role::Versioning';
 
 #------------------------------------------------------------------
-# WEBGUI API METHODS
-# Some of these override parent Moose and DBIx::Class methods
+# Snippet-specific methods
 
 
 1;

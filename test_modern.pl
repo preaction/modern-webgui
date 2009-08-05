@@ -4,9 +4,9 @@ use strict;
 use warnings;
 use lib "lib";
 
-use WebGUIx::Asset;
+use WebGUIx::Asset::Schema;
 
-my $assets = WebGUIx::Asset->connect( 
+my $assets = WebGUIx::Asset::Schema->connect( 
     'dbi:mysql:svn', 'root', 'nasty1' 
 );
 
