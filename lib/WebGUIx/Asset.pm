@@ -2,14 +2,83 @@ package WebGUIx::Asset;
 
 use Carp qw( croak );
 
+# Constants. These should be placed somewhere else later
+our $GROUPID_TURN_ADMIN_ON  = "12";
+
+
 # The common methods that everyone needs
 
-#sub can_add { ... }
-#sub can_edit { ... }
-#sub can_view { ... }
+#----------------------------------------------------------------------------
+
+=head2 can_add ( ?user|userId )
+
+Returns true if the user is allowed to add this asset to the current asset. 
+The user is allowed to add this asset if they are in the C<addGroup> of the
+asset class in this site's configuration file. The user must also pass a 
+L<can_edit> check for the current asset. 
+
+The user defaults to the current user if none is provided.
+
+=cut
+
+sub can_add { 
+    my ( $self, $user ) = @_;
+    
+    my $session = $self->session;
+
+    if ( !$user ) {
+        # Default to current user
+        $user       = $session->user;
+    }
+    elsif ( !ref $user ) {  
+        # Must be a userId
+        $user       = WebGUI::User->new( $session, $user );
+    }
+    
+    my $group_id = $session->config->get("assets/" . $self->tree->className . "/addGroup")
+                || $GROUPID_TURN_ADMIN_ON
+                ;
+
+    return $user->isInGroup( $group_id );
+}
+
+#----------------------------------------------------------------------------
+
+=head2 can_edit ( ?user|userId )
+
+Returns true if the user is allowed to edit this asset. Users can edit assets
+if they are in the group specified by C<groupIdView> or if they are the owner
+of the asset, specified by C<ownerUserId>.
+
+The user defaults to the current user if none is provided.
+
+=cut
+
+sub can_edit { 
+    my ( $self, $user ) = @_;
+    my $session = $self->session;
+
+    if ( !$user ) {
+        # Default to current user
+        $user       = $session->user;
+    }
+    elsif ( !ref $user ) {  
+        # Must be a userId
+        $user       = WebGUI::User->new( $session, $user );
+    }
+    
+    return $user->isInGroup( $self->data->groupIdEdit );
+}
+
+#----------------------------------------------------------------------------
+
+=head2 can_view ( ?user|userId )
+
+Returns true if the user is allowed to view this asset. 
+sub can_view { ... }
 #sub cut { ... }
 #sub duplicate { ... }
-#sub get_container_asset { ... }
+#sub get_container { ... }
 #sub get_edit_form { ... }
 #sub get_last_modified { ... }
 #sub get_lineage { ... }

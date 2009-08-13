@@ -13,4 +13,7 @@ __PACKAGE__->set_primary_key( 'assetId' );
 __PACKAGE__->position_column( 'rank' );
 __PACKAGE__->grouping_column( 'parentId' );
 
+# Add dynamic subclassing
+
+
 1;

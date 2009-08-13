@@ -16,6 +16,11 @@ my $snippet
         revisionDate    => 1244488512,
     });
 
-print $snippet->base->title . "\n";
+print $snippet->data->title . "\n";
 
-$snippet->add_revision;
+#my $new = $snippet->add_revision;
+#print $new->data->title . " (" . $new->revisionDate . ") \n";
+
+for my $r ( $snippet->get_all_revisions ) {
+    print $r->title . " (" . $r->revisionDate . ") \n";
+}

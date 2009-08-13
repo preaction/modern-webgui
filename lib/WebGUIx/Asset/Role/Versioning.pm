@@ -14,12 +14,32 @@ revision.
 
 
 sub add_revision { 
-    my ( $self ) = @_;    
-    
+    my ( $self ) = @_;
+    my $revision_date   = time;
+
+    # Create a version tag if necessary
+
+    $self->data->copy( { revisionDate => $revision_date } );
+    my $new_revision    = $self->copy( { revisionDate => $revision_date } );
+    return $new_revision;
 }
 
 #sub commit { ... }
-#sub get_all_revision_dates { ... }
+
+#----------------------------------------------------------------------------
+
+=head2 get_all_revisions ( )
+
+Get a ResultSet with all the revisions of this asset.
+
+=cut
+
+sub get_all_revisions {
+    my ( $self ) = @_;
+    my $schema      = $self->result_source->schema;
+    return $schema->resultset('Any')->search( { assetId => $self->assetId } );
+}
+
 #sub get_current_revision_date { ... }
 #sub get_toolbar { ... }
 #sub get_version_tag { ... }

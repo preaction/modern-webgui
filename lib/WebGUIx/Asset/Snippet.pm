@@ -1,7 +1,8 @@
 package WebGUIx::Asset::Snippet;
 
 use Moose;
-extends qw{ DBIx::Class };
+extends qw{ WebGUIx::Asset DBIx::Class };
+with 'WebGUIx::Asset::Role::Versioning';
 
 __PACKAGE__->load_components(qw{ Core });
 
@@ -13,20 +14,19 @@ __PACKAGE__->add_columns(qw{
 });
 __PACKAGE__->set_primary_key( 'assetId', 'revisionDate' );
 __PACKAGE__->belongs_to(
-    'base' => 'WebGUIx::Asset::Any',
+    'data' => 'WebGUIx::Asset::Any',
     { 
         'foreign.assetId'         => 'self.assetId',
         'foreign.revisionDate'    => 'self.revisionDate',
-    }
+    },
 );
 __PACKAGE__->belongs_to(
     'tree' => 'WebGUIx::Asset::Tree',
-    { 'foreign.assetId' => 'self.assetId' },
+    { 
+        'foreign.assetId' => 'self.assetId'
+    },
 );
 
-
-with 'WebGUIx::Asset::Role::Common';
-with 'WebGUIx::Asset::Role::Versioning';
 
 #------------------------------------------------------------------
 # Snippet-specific methods

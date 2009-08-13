@@ -11,4 +11,6 @@ __PACKAGE__->add_columns(qw{
 });
 __PACKAGE__->set_primary_key( 'assetId', 'revisionDate' );
 
+# Add dynamic subclassing
+
 1;
