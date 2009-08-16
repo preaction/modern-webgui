@@ -1,0 +1,16 @@
+In order to install / run the test suite you'll need:
+*) Perl 5.10.1 RC 1
+*) Moose
+*) DBIx::Class
+*) DBIx::Class::VirtualColumns
+*) DBIx::Class::Ordered
+*) Test::Class
+
+You'll also need to edit your WebGUI site's schema:
+*) ALTER TABLE asset ADD COLUMN rank BIGINT
+
+To run the test suite, do:
+
+cd <path to WebGUIx t/ directory>
+WEBGUI_CONFIG=<full path to config> 
+perl -I<webgui lib> -I<webgui t/lib> -I<WebGUIx lib/> TestClass.t

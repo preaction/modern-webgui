@@ -1,12 +1,13 @@
 package WebGUIx::Asset::Snippet;
 
 use Moose;
-extends qw{ WebGUIx::Asset DBIx::Class };
+extends qw{ DBIx::Class };
 with 'WebGUIx::Asset::Role::Versioning';
 
-__PACKAGE__->load_components(qw{ Core });
+__PACKAGE__->load_components(qw{ +WebGUIx::Asset VirtualColumns Core });
 
 __PACKAGE__->table( 'snippet' );
+__PACKAGE__->add_virtual_columns(qw{ session });
 __PACKAGE__->add_columns(qw{ 
     assetId revisionDate
     snippet processAsTemplate mimeType cacheTimeout

@@ -5,22 +5,14 @@ use warnings;
 use lib "lib";
 
 use WebGUIx::Asset::Schema;
+use WebGUI::Session;
 
-my $assets = WebGUIx::Asset::Schema->connect( 
-    'dbi:mysql:svn', 'root', 'nasty1' 
-);
+my $session = WebGUI::Session->open( '/data/WebGUI', 'svn.conf' );
+
+my $assets = WebGUIx::Asset::Schema->connect( sub { $session->db->dbh } );
 
 my $snippet 
-    = $assets->resultset('Snippet')->find({
-        assetId         => "kwTL1SWCk0GlpiJ5zAAEPQ",
-        revisionDate    => 1244488512,
+    = $assets->resultset('Snippet')->create({
+        session     => $session,
     });
 
-print $snippet->data->title . "\n";
-
-#my $new = $snippet->add_revision;
-#print $new->data->title . " (" . $new->revisionDate . ") \n";
-
-for my $r ( $snippet->get_all_revisions ) {
-    print $r->title . " (" . $r->revisionDate . ") \n";
-}
