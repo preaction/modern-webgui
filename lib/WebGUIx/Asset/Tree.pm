@@ -12,23 +12,32 @@ __PACKAGE__->add_columns(qw{
 __PACKAGE__->set_primary_key( 'assetId' );
 __PACKAGE__->position_column( 'rank' );
 __PACKAGE__->grouping_column( 'parentId' );
+__PACKAGE__->has_many(
+    'data'  => 'WebGUIx::Asset::Any',
+    {
+        'foreign.assetId' => 'self.assetId',
+    },
+);
 
 #----------------------------------------------------------------------------
 
-=head2 inflate_result ( ... )
+=head2 as_asset ( )
 
-Override inflate_result() to provide dynamic subclassing.
+Return the result as the WebGUIx::Asset subtype.
 
 =cut
 
-sub inflate_result { 
-    my $self    = shift;  
-    my $asset   = $self->next::method(@_); 
-    if ( ref $asset eq 'WebGUIx::Asset::Tree' ) {
-        # This doesn't work, because every WebGUIx::Asset object
-        # contains one of these objects.
-    } 
-    return $asset; 
-} 
+sub as_asset {
+    my ( $self ) = @_;
+    my ( $src ) = $self->className =~ m/([^:]+)$/;
+    my $revisionDate = $self->className->get_current_revision_date(
+        $self->result_source->schema,
+        $self->assetId,
+    );
+    return $self->result_source->schema->resultset( $src )->find({
+        assetId         => $self->assetId,
+        revisionDate    => $revisionDate,
+    });
+}
 
 1;

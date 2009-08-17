@@ -174,6 +174,29 @@ sub get_container {
 
 #----------------------------------------------------------------------------
 
+=head2 CLASS->get_current_revision_date ( schema, assetId )
+
+Get the most recent revision date the user is allowed to see. This is a class
+method used to create asset instances when we don't know what revision date
+to use.
+
+=cut
+
+sub get_current_revision_date {
+    my ( $class, $schema, $assetId ) = @_;
+    return $schema->resultset('Any')->search(
+        {
+            assetId     => $assetId,
+        },
+        {
+            order_by    => { -desc => 'revisionDate' },
+            rows        => 1,
+        }
+    )->single;
+}
+
+#----------------------------------------------------------------------------
+
 #sub get_edit_form { ... }
 
 #----------------------------------------------------------------------------

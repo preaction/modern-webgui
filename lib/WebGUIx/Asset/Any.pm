@@ -18,24 +18,24 @@ __PACKAGE__->belongs_to(
     },
 );
 
-# Add automatic revisionDate finding
-
 #----------------------------------------------------------------------------
 
-=head2 inflate_result ( ... )
+=head2 as_asset ( )
 
-Override inflate_result() to provide dynamic subclassing.
+Return the result as the WebGUIx::Asset subtype.
 
 =cut
 
-sub inflate_result { 
-    my $self    = shift;  
-    my $asset   = $self->next::method(@_); 
-    if ( ref $asset eq 'WebGUIx::Asset::Any' ) {
-        # This doesn't work because every WebGUIx::Asset object
-        # contains one of these objects.
-    } 
-    return $asset; 
-} 
+sub as_asset {
+    my ( $self ) = @_;
+    my ( $src ) = $self->tree->className =~ m/([^:]+)$/;
+    return $self->result_source->schema->resultset( $src )->find({
+        assetId         => $self->assetId,
+        revisionDate    => $self->revisionDate,
+        }, {
+            prefetch    => [ 'data', 'tree' ],
+        }
+    );
+}
 
 1;

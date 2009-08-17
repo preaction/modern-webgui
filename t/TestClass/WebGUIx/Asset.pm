@@ -15,7 +15,7 @@ use WebGUIx::Constant;
 sub asset_name { return "Asset" }
 sub asset_class { return 'WebGUIx::Asset' }
 
-sub create : Test(startup => 7) {
+sub create : Test(startup => 8) {
     my ( $self ) = @_;
     my $asset   = $self->schema->resultset($self->asset_name)->create({
         session => $self->session,
@@ -42,14 +42,14 @@ sub create : Test(startup => 7) {
     my $asset_again = $self->schema->resultset( 'Any' )->find( {
         assetId         => $asset->assetId,
         revisionDate    => $asset->revisionDate,
-    } );
+    } )->as_asset;
 
     isa_ok( $asset_again, ref($asset), "Asset from database has same class" );
 
     # Can we get the asset from the db once more?
     $asset_again    = $self->schema->resultset( 'Tree' )->find( {
         assetId         => $asset->assetId,
-    } );
+    } )->as_asset;
     
     $self->{asset} = $asset;
 }
