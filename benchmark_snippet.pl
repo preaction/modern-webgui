@@ -15,7 +15,7 @@ timethese( 10_000, {
         my $asset   = WebGUI::Asset->newByDynamicClass( $session, "3n3H85BsdeRQ0I08WmvlOg" );
     },
     "WebGUIx" => sub {
-        my $asset   = $schema->resultset('Any')->find({ assetId => "3n3H85BsdeRQ0I08WmvlOg" }, prefetch => ['tree'])
+        my $asset   = $schema->resultset('Any')->find({ assetId => "3n3H85BsdeRQ0I08WmvlOg" } )
                     ->as_asset;
     },
 });

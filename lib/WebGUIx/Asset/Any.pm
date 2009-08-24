@@ -32,9 +32,7 @@ sub as_asset {
     return $self->result_source->schema->resultset( $src )->find({
         assetId         => $self->assetId,
         revisionDate    => $self->revisionDate,
-        }, {
-            prefetch    => [ 'data', 'tree' ],
-        }
+        },
     );
 }
 
