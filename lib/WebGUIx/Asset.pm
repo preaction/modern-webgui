@@ -1,15 +1,32 @@
 package WebGUIx::Asset;
 
 use Moose;
-extends qw{ DBIx::Class };
 use Carp qw( croak );
 use WebGUIx::Constant;
 
-# Constants. These should be placed somewhere else later
+extends 'WebGUIx::Model';
 
-# The common methods that everyone needs
-# You should inherit from this for your own asset
-# This class cannot be instanciated
+sub table {
+    my ( $class, $table ) = @_;
+    $class->next::method( $table );
+    $class->add_columns(qw{ 
+        assetId revisionDate
+    });
+    $class->set_primary_key( 'assetId', 'revisionDate' );
+    $class->belongs_to(
+        'data' => 'WebGUIx::Asset::Any',
+        { 
+            'foreign.assetId'         => 'self.assetId',
+            'foreign.revisionDate'    => 'self.revisionDate',
+        },
+    );
+    $class->belongs_to(
+        'tree' => 'WebGUIx::Asset::Tree',
+        { 
+            'foreign.assetId' => 'self.assetId'
+        },
+    );
+}
 
 #----------------------------------------------------------------------------
 
@@ -112,6 +129,12 @@ with while their ancestor is on the clipboard.
 sub cut { 
     my ( $self ) = @_;
     
+    $self->tree->state($WebGUIx::Constant::STATE_CLIPBOARD);
+    for my $result ( $self->get_descendants ) {
+        $result->state($WebGUIx::Constant::STATE_CLIPBOARD_LIMBO);
+    }
+
+    return;
 }
 
 #----------------------------------------------------------------------------
@@ -132,22 +155,35 @@ because it needs to be used for versioning.
 sub duplicate {
     my ( $self, $properties ) = @_;
 
+    my $new_id  = $self->session->id->generate;
+    my $now     = time;
+    my $copy = $self->tree->copy( { assetId => $new_id } );
+    $self->copy( { assetId => $new_id, revisionDate => $now } );
+    
+    return $copy->as_asset;
 }
 
 #----------------------------------------------------------------------------
 
-=head2 get_children ( options )
+=head2 get_children ( constraints, options )
 
-Get the children of this asset. C<options> is a hashref with the following
-keys.
+Get the children of this asset. C<constraints> is a hashref of constraints
+for DBIx::Class. C<options> is a hashref of options for DBIx::Class.
 
- ...
+Returns a DBIx::Class::ResultSet of WebGUI::Asset::Tree objects.
+
+You can use the L<WebGUI::Asset::Tree::as_asset> method to get the full
+asset class if you need it.
 
 =cut
 
 sub get_children {
-    my ( $self, $options ) = @_;
+    my ( $self, $constraints, $options ) = @_;
+    my $schema  = $self->result_source->schema;
 
+    $constraints->{ parentId } = $self->assetId;
+
+    return $schema->resultset('Tree')->search( $constraints, $options );
 }
 
 #----------------------------------------------------------------------------
@@ -197,6 +233,31 @@ sub get_current_revision_date {
 
 #----------------------------------------------------------------------------
 
+=head2 get_descendants ( constraints, options )
+
+Get the descendants of this asset. C<constraints> is a hashref of constraints
+for DBIx::Class. C<options> is a hashref of options for DBIx::Class.
+
+Returns a DBIx::Class::ResultSet of WebGUI::Asset::Tree objects.
+
+You can use the L<WebGUI::Asset::Tree::as_asset> method to get the full
+asset class if you need it.
+
+=cut
+
+sub get_descendants {
+    my ( $self, $constraints, $options ) = @_;
+    my $schema  = $self->result_source->schema;
+
+    $constraints->{ lineage } = {
+        LIKE => $self->tree->lineage . '%',
+    };
+
+    return $schema->resultset('Tree')->search( $constraints, $options );
+}
+
+#----------------------------------------------------------------------------
+
 #sub get_edit_form { ... }
 
 #----------------------------------------------------------------------------
@@ -215,8 +276,6 @@ sub get_last_modified {
     return $self->revisionDate;
 }
 
-#----------------------------------------------------------------------------
-#sub get_lineage { ... }
 #----------------------------------------------------------------------------
 
 =head2 get_parent ( )
@@ -300,6 +359,9 @@ croak.
 sub new {
     my ( $class, $attr ) = @_;
     my $session = $attr->{session};
+
+    #use Data::Dumper; warn Dumper \@_;
+    #use Carp qw(longmess); warn Carp::longmess();
 
     # Autogenerate missing properties
     $attr->{ assetId                } ||= $session->id->generate;

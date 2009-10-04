@@ -1,9 +1,7 @@
 package WebGUIx::Asset::Any;
 
 use Moose;
-extends qw{ DBIx::Class };
-
-__PACKAGE__->load_components(qw{ Core });
+extends qw{ WebGUIx::Model };
 
 __PACKAGE__->table( 'assetData' );
 __PACKAGE__->add_columns(qw{

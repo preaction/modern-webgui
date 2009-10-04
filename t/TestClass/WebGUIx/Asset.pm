@@ -11,10 +11,22 @@ use WebGUIx::Constant;
 
 # A Test::Class for WebGUIx::Assets
 # When creating your own, inherit from TestClass::WebGUIx::Asset 
-# and override the asset_class and asset_class sub.
+# and override the asset_class and asset_properties sub.
 
 # Must override this
 sub asset_class { return 'WebGUIx::Asset' }
+sub asset_properties { 
+    return {
+        data        => {
+            groupIdEdit     => $WebGUIx::Constant::GROUPID_ADMIN,
+            groupIdView     => $WebGUIx::Constant::GROUPID_REGISTERED_USER,
+        },
+        tree        => {
+            #className      # filled in by default
+            #parentId       # filled in by default
+        },
+    };
+}
 
 #----------------------------------------------------------------------------
 
@@ -90,38 +102,45 @@ sub can_add : Test(7) {
 
 #----------------------------------------------------------------------------
 
-#sub can_edit : Test() {
-#    my ( $self ) = @_;
-#    my $asset   = $self->{asset};
-#    my $session = $self->session;
-#    
-#    
-#
-#}
-
-#----------------------------------------------------------------------------
-
-#sub can_view : Test() {
-#    my ( $self ) = @_;
-#    my $asset   = $self->{asset};
-#    my $session = $self->session;
-#    
-#    
-#
-#}
-
-#----------------------------------------------------------------------------
-
-sub create : Test(startup => 8) {
+sub can_edit : Test(3) {
     my ( $self ) = @_;
+    my $asset   = $self->{asset};
+    my $session = $self->session;
+    
+    $session->user({ user => $self->{user}->{admin} });
+    ok( $asset->can_edit, "Admin can_edit as default" );
+    ok( !$asset->can_edit( $self->{user}->{normal} ), "Normal cannot edit as argument" );
+    ok( !$asset->can_edit( $self->{user}->{visitor}->getId ), "Visitor cannot edit as userId" );
+
+    return;
+}
+
+#----------------------------------------------------------------------------
+
+sub can_view : Test(3) {
+    my ( $self ) = @_;
+    my $asset   = $self->{asset};
+    my $session = $self->session;
+    
+    $session->user({ user => $self->{user}->{admin} });
+    ok( $asset->can_view, "Admin can_view as default" );
+    ok( $asset->can_view( $self->{user}->{normal} ), "Normal can_view as argument" );
+    ok( !$asset->can_view( $self->{user}->{visitor}->getId ), "Visitor cannot edit as userId" );
+
+    return;
+}
+
+#----------------------------------------------------------------------------
+
+sub create : Test(startup => 7) {
+    my ( $self ) = @_;
+    print join ', ' => Class::C3::calculateMRO($self->asset_class);
     my $asset   = $self->schema->resultset($self->asset_class)->create({
-        session => $self->session,
+        session     => $self->session,
+        %{ $self->asset_properties },
     });
     isa_ok( $asset, $self->asset_class );
     isa_ok( $asset, 'WebGUIx::Asset', 'All assets must inherit from common base' );
-    is( $asset->tree->parentId, $WebGUIx::Constant::ASSETID_ROOT,
-        "Default parentId is root asset",
-    );
     like( $asset->assetId, qr/[a-zA-Z0-9_-]{22}/,
         "assetId is a GUID"
     );
@@ -151,6 +170,17 @@ sub create : Test(startup => 8) {
     $self->{asset} = $asset;
 }
 
+#----------------------------------------------------------------------------
+
+sub cut : Test(1) {
+    my ( $self ) = @_;
+    my $asset   = $self->{asset};
+    $asset->cut;
+    is( $asset->tree->state, $WebGUIx::Constant::STATE_CLIPBOARD );
+}
+
+#----------------------------------------------------------------------------
+
 sub delete : Test(shutdown => 1) {
     my ( $self ) = @_;
     my $asset_id    = $self->{asset}->assetId;
@@ -160,6 +190,30 @@ sub delete : Test(shutdown => 1) {
     );
 }
 
+#----------------------------------------------------------------------------
+
+sub duplicate : Test(2) {
+    my ( $self ) = @_;
+    my $asset       = $self->{asset};
+    my $copy        = $asset->duplicate;
+
+    return;
+}
+
+#----------------------------------------------------------------------------
+
+sub get_parent : Test(2) {
+    my ( $self ) = @_;
+    is( $self->{asset}->tree->parentId, $WebGUIx::Constant::ASSETID_ROOT,
+        "Default parentId is root asset",
+    );
+    is ( $self->{asset}->get_parent->assetId, $WebGUIx::Constant::ASSETID_ROOT,
+        "get_parent returns an asset",
+    );
+}
+
+#----------------------------------------------------------------------------
+
 sub schema {
     my ( $self ) = @_;
     if ( !$self->{_schema} ) {
@@ -168,6 +222,8 @@ sub schema {
     }
     return $self->{_schema};
 }
+
+#----------------------------------------------------------------------------
 
 sub session {
     return WebGUI::Test->session;

@@ -1,9 +1,9 @@
 package WebGUIx::Asset::Tree;
 
 use Moose;
-extends qw{ DBIx::Class };
+extends qw{ WebGUIx::Model };
 
-__PACKAGE__->load_components(qw{ Ordered Core });
+__PACKAGE__->load_components(qw{ Ordered });
 
 __PACKAGE__->table( 'asset' );
 __PACKAGE__->add_columns(qw{
