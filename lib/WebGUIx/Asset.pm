@@ -159,10 +159,10 @@ sub duplicate {
 
     my $new_id  = $self->session->id->generate;
     my $now     = time;
-    my $copy = $self->tree->copy( { assetId => $new_id } );
-    $self->copy( { assetId => $new_id, revisionDate => $now } );
+    $self->tree->copy( { assetId => $new_id, lineage => $new_id } );
+    my $copy = $self->copy( { assetId => $new_id, revisionDate => $now } );
     
-    return $copy->as_asset;
+    return $copy;
 }
 
 #----------------------------------------------------------------------------

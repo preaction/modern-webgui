@@ -191,10 +191,19 @@ sub delete : Test(shutdown => 1) {
 
 #----------------------------------------------------------------------------
 
-sub duplicate : Test(2) {
+sub duplicate : Test(4) {
     my ( $self ) = @_;
     my $asset       = $self->{asset};
     my $copy        = $asset->duplicate;
+
+    isnt( $asset->assetId, $copy->assetId, 'copy has new id' );
+    isnt( $asset->tree->assetId, $copy->tree->assetId, 'copy has new id' );
+    isnt( $asset->data->assetId, $copy->data->assetId, 'copy has new id' );
+
+    my $new_copy = $self->schema->resultset('Any')->find({ 
+        assetId => $copy->assetId,
+    })->as_asset;
+    ok( $new_copy, 'new copy can be instanced from database' );
 
     return;
 }
