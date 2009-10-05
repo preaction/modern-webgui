@@ -5,14 +5,13 @@ use MooseX::Declare;
 
 extends qw{ DBIx::Class };
 
-__PACKAGE__->load_components(qw{ VirtualColumns Core });
+__PACKAGE__->load_components(qw{ Core });
 
 # Base class for all WebGUI models
 
 sub table {
     my ( $class, $table ) = @_;
     $class->next::method( $table );
-    $class->add_virtual_columns(qw{ session });
 }
 
 

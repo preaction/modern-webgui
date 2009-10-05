@@ -134,13 +134,12 @@ sub can_view : Test(3) {
 
 sub create : Test(startup => 7) {
     my ( $self ) = @_;
-    print join ', ' => Class::C3::calculateMRO($self->asset_class);
     my $asset   = $self->schema->resultset($self->asset_class)->create({
         session     => $self->session,
         %{ $self->asset_properties },
     });
     isa_ok( $asset, $self->asset_class );
-    isa_ok( $asset, 'WebGUIx::Asset', 'All assets must inherit from common base' );
+    isa_ok( $asset, 'WebGUIx::Asset', 'asset' );
     like( $asset->assetId, qr/[a-zA-Z0-9_-]{22}/,
         "assetId is a GUID"
     );

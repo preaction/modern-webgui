@@ -5,6 +5,7 @@ use Carp qw( croak );
 use WebGUIx::Constant;
 
 extends 'WebGUIx::Model';
+__PACKAGE__->load_components(qw{ VirtualColumns });
 
 sub table {
     my ( $class, $table ) = @_;
@@ -12,6 +13,7 @@ sub table {
     $class->add_columns(qw{ 
         assetId revisionDate
     });
+    $class->add_virtual_columns(qw{ session });
     $class->set_primary_key( 'assetId', 'revisionDate' );
     $class->belongs_to(
         'data' => 'WebGUIx::Asset::Any',
@@ -359,9 +361,6 @@ croak.
 sub new {
     my ( $class, $attr ) = @_;
     my $session = $attr->{session};
-
-    #use Data::Dumper; warn Dumper \@_;
-    #use Carp qw(longmess); warn Carp::longmess();
 
     # Autogenerate missing properties
     $attr->{ assetId                } ||= $session->id->generate;
