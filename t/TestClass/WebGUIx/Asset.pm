@@ -222,6 +222,25 @@ sub get_parent : Test(2) {
 
 #----------------------------------------------------------------------------
 
+sub get_url : Test(3) {
+    my ( $self ) = @_;
+    my $asset = $self->{asset};
+
+    is( $asset->get_url, join( "", $self->session->url->gateway, $asset->data->url ) );
+    is( 
+        $asset->get_url( param1 => 'one' ), 
+        join( "", $self->session->url->gateway, $asset->data->url, '?param1=one' )
+    );
+    is( 
+        $asset->get_url( param1 => 'one', param2 => 'two' ), 
+        join( "", $self->session->url->gateway, $asset->data->url, '?param1=one;param2=two' )
+    );
+
+    return;
+}
+
+#----------------------------------------------------------------------------
+
 sub schema {
     my ( $self ) = @_;
     if ( !$self->{_schema} ) {

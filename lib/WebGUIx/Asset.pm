@@ -1,7 +1,8 @@
 package WebGUIx::Asset;
 
-use Moose;
 use Carp qw( croak );
+use Moose;
+use URI;
 use WebGUIx::Constant;
 
 extends 'WebGUIx::Model';
@@ -302,18 +303,24 @@ sub get_parent {
 =head2 get_url ( params )
 
 Get an absolute URL to this asset. C<params> is a hashref of URL parameters
-to add to the URL.
+to add to the URL. Multiple values may be passed as an arrayref. See 
+L<URI::query_form()> for info.
 
 This is different from the C<url> property because it includes the site's 
-gateway. If you want a full URL with schema and domain name, use
-get_url_full().
+gateway. 
+
+If you want a full URL with schema and domain name, use get_url_full().
 
 =cut
 
 sub get_url {
-    my ( $self, $params ) = @_;
+    my ( $self, @params ) = @_;
     
-
+    my $u   = URI->new_abs( $self->data->url, $self->session->url->gateway );
+    if ( @params ) {
+        $u->query_form( @params, ';' ); # seperate with ;
+    }
+    return $u->as_string;
 }
 
 #----------------------------------------------------------------------------
