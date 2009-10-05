@@ -173,7 +173,7 @@ sub duplicate {
 Get the children of this asset. C<constraints> is a hashref of constraints
 for DBIx::Class. C<options> is a hashref of options for DBIx::Class.
 
-Returns a DBIx::Class::ResultSet of WebGUI::Asset::Tree objects.
+Returns a DBIx::Class::ResultSet of WebGUIx::Asset::Tree objects.
 
 You can use the L<WebGUI::Asset::Tree::as_asset> method to get the full
 asset class if you need it.
@@ -297,12 +297,10 @@ sub get_parent {
 #----------------------------------------------------------------------------
 #sub get_template_vars { ... }
 #----------------------------------------------------------------------------
-#sub get_toolbar { ... }
-#----------------------------------------------------------------------------
 
 =head2 get_url ( params )
 
-Get an absolute URL to this asset. C<params> is a hashref of URL parameters
+Get an absolute URL to this asset. C<params> is an array of URL parameters
 to add to the URL. Multiple values may be passed as an arrayref. See 
 L<URI::query_form()> for info.
 
@@ -327,23 +325,46 @@ sub get_url {
 
 =head2 get_url_full ( params )
 
-Get the full URL to this asset. C<params> is a hashref of URL parameters
-to add to the URL.
+Get the full URL to this asset. C<params> is an array of URL parameters
+to add to the URL. Multiple values may be passed as an arrayref. See 
+L<URI::query_form()> for info.
 
 This is different from the C<url> property because it includes the URL 
-schema, domain name, and site gateway. This should only be used when creating
-URLs to send out via e-mail or RSS or etc...
+schema, domain name, and site gateway. 
+
+This should only be used when creating URLs to send out via e-mail or RSS 
+or etc...
 
 =cut
 
 sub get_url_full {
-    my ( $self, $params ) = @_;
+    my ( $self, @params ) = @_;
     
-
+    my $u   = URI->new( $self->session->url->getSiteURL );
+    $u->path( $self->session->url->gateway( $self->data->url ) );
+    if ( @params ) {
+        $u->query_form( @params, ';' ); # seperate with ;
+    }
+    return $u->as_string;
 }
 
 #----------------------------------------------------------------------------
-#sub has_children { ... }
+
+=head2 has_children ( ) 
+
+Returns true if the asset has any children
+
+=cut
+
+sub has_children {
+    my ( $self ) = @_;
+    my $rs
+        = $self->result_source->schema->resultset('Tree')->find({
+            parentId    => $self->assetId,
+        });
+    return 1 if $rs;
+}
+
 #----------------------------------------------------------------------------
 
 =head2 log ( action, message )
@@ -403,6 +424,7 @@ sub prepare_view {
     # XXX
 }
 
+#----------------------------------------------------------------------------
 #sub paste { ... }
 #----------------------------------------------------------------------------
 #sub process_edit_form { ... }
