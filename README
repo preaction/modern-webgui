@@ -1,5 +1,5 @@
 In order to install / run the test suite you'll need:
-*) Perl 5.10.1 RC 1
+*) Perl 5.10.1 
 *) Moose
 *) DBIx::Class
 *) DBIx::Class::VirtualColumns
@@ -14,3 +14,70 @@ To run the test suite, do:
 cd <path to WebGUIx t/ directory>
 WEBGUI_CONFIG=<full path to config> 
 perl -I<webgui lib> -I<webgui t/lib> -I<WebGUIx lib/> TestClass.t
+
+RELEASE PLAN
+
+-- 1.0
+
+WebGUIx::Model
+
+WebGUIx::Asset
+    Template
+    RawContent          - Rename snippet
+    RichContent         - Rename article
+    Page                - Rename layout
+    Role::MultiViews    - Replace the ?func=... with a URL for each view
+    Role::Translate     - user-translatable fields in this asset
+    Role::Compat        - Backwards-compatibility for WebGUI
+
+WebGUIx::Field
+    check_one
+    check_many
+    date
+    datetime
+    hidden
+    html
+    image
+    int
+    file
+    float
+    radio
+    read_only
+    select_one
+    select_many
+    text
+    time
+    
+WebGUIx::View                   - Build a template from a model
+    single                      - Any single model
+    list                        - Any list of models
+    edit                        - An edit form for a model
+
+WebGUIx::View::Asset            - WebGUIx::View subclass for assets
+    list_child_assets           - List the child assets
+
+WebGUIx::Content::Asset         - WebGUI content handler for WebGUIx::Assets
+WebGUIx::Content::MultiViews    - WebGUI content handler for Role::MultiViews
+
+-- 2.0
+
+Clean up APIs to make things as DRY as possible
+
+WebGUIx::Asset::Role::MultiViews::Calendar
+    - Create list views for calendar dates for child assets
+
+WebGUIx::User
+WebGUIx::Group
+WebGUIx::Request
+
+WebGUIx::Asset::Profile
+WebGUIx::Asset::Admin::Profile
+
+WebGUIx::Asset::Admin::Template     - Template editor
+WebGUIx::Asset::Admin::SiteEditor   - A simple site editor
+WebGUIx::Asset::Admin::Model        - CRUD for any installed model
+
+-- future
+
+Investigate speed of MongoDB
+    If faster make WebGUIx::Model an ORM for MongoDB.
