@@ -1,7 +1,7 @@
 package WebGUIx::Asset::Role::Versioning;
 
 use Moose::Role;
-
+use WebGUI::VersionTag;
 
 #----------------------------------------------------------------------------
 
@@ -40,7 +40,49 @@ sub get_all_revisions {
     return $schema->resultset('Any')->search( { assetId => $self->assetId } );
 }
 
-#sub get_current_revision_date { ... }
+#----------------------------------------------------------------------------
+
+=head2 CLASS->get_current_revision_date ( session, asset_id )
+
+Get the most current revision date the user should see. If the user is inside
+of a version tag, show them their latest changes. Otherwise show the latest
+committed version.
+
+=cut
+
+sub get_current_revision_date {
+    my ( $class, $session, $asset_id ) = @_;
+    $session->log->info( sprintf 'Getting revision date for %s (%s)', $class, $asset_id );
+    my $schema = WebGUIx::Asset::Schema->connect( sub { $session->db->dbh } );
+
+    my %tag     = ();
+    if ( my $tag = WebGUI::VersionTag->getWorking( $session, "nocreate" ) ) {
+        $tag{ -and } = [ 
+            tagId   => $tag->getId,
+            status  => "pending",
+        ];
+    }
+
+    my $row
+        = $schema->resultset('Any')->search({
+            assetId => $asset_id,
+            -or => [
+                -or => [
+                    status      => { '!=' => "pending" },
+                    status      => \"IS NULL",
+                ],
+                %tag,
+            ],
+        }, {
+            order_by    => { -desc => 'revisionDate' },
+            columns     => [ 'revisionDate' ],
+            cache       => 1,
+        })
+        ->single;
+
+    return $row->revisionDate;
+}
+
 #sub get_toolbar { ... }
 #sub get_version_tag { ... }
 #sub process_edit_form { ... }

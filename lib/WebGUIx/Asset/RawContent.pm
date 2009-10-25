@@ -3,6 +3,7 @@ package WebGUIx::Asset::RawContent;
 use Moose;
 extends qw{ WebGUIx::Asset };
 with 'WebGUIx::Asset::Role::Versioning';
+with 'WebGUIx::Asset::Role::Compatible';
 
 __PACKAGE__->table( 'RawContent' );
 __PACKAGE__->add_columns(qw{ 
