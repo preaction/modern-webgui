@@ -6,16 +6,36 @@ use URI;
 use WebGUIx::Constant;
 
 extends 'WebGUIx::Model';
-__PACKAGE__->load_components(qw{ VirtualColumns });
+
+__PACKAGE__->load_components( qw{ VirtualColumns } );
+
+has 'session' => (
+    is      => 'ro',
+    isa     => 'WebGUI::Session',
+);
+
+has 'assetId' => (
+    traits  => [qw/ DB /],
+    is      => 'ro',
+    isa     => 'Str',
+    db      => {
+        primary_key     => 1,
+        size            => 22,
+    },
+);
+
+has 'revisionDate' => (
+    traits  => [qw/ DB /],
+    is      => 'ro',
+    isa     => 'Int',
+    db      => {
+        primary_key     => 1,
+    },
+);
 
 sub table {
     my ( $class, $table ) = @_;
     $class->next::method( $table );
-    $class->add_columns(qw{ 
-        assetId revisionDate
-    });
-    $class->add_virtual_columns(qw{ session });
-    $class->set_primary_key( 'assetId', 'revisionDate' );
     $class->belongs_to(
         'data' => 'WebGUIx::Asset::Any',
         { 

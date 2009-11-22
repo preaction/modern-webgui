@@ -21,17 +21,17 @@ __PACKAGE__->has_many(
 
 #----------------------------------------------------------------------------
 
-=head2 as_asset ( )
+=head2 as_asset ( session )
 
 Return the result as the WebGUIx::Asset subtype.
 
 =cut
 
 sub as_asset {
-    my ( $self ) = @_;
+    my ( $self, $session ) = @_;
     my ( $src ) = $self->className =~ m/([^:]+)$/;
     my $revisionDate = $self->className->get_current_revision_date(
-        $self->result_source->schema,
+        $session,
         $self->assetId,
     );
     return $self->result_source->schema->resultset( $src )->find({

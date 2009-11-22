@@ -155,6 +155,7 @@ sub create : Test(startup => 7) {
 
     # Can we get the asset from the db again?
     my $asset_again = $self->schema->resultset( 'Any' )->find( {
+        session         => $self->session,
         assetId         => $asset->assetId,
         revisionDate    => $asset->revisionDate,
     } )->as_asset;
@@ -163,8 +164,9 @@ sub create : Test(startup => 7) {
 
     # Can we get the asset from the db once more?
     $asset_again    = $self->schema->resultset( 'Tree' )->find( {
+        session         => $self->session,
         assetId         => $asset->assetId,
-    } )->as_asset;
+    } )->as_asset( $self->session );
     
     $self->{asset} = $asset;
 }
@@ -288,6 +290,7 @@ sub schema {
     if ( !$self->{_schema} ) {
         $self->{_schema} 
             = WebGUIx::Asset::Schema->connect( sub { $self->session->db->dbh } );
+        $self->session->{schema} = $self->{_schema};
     }
     return $self->{_schema};
 }

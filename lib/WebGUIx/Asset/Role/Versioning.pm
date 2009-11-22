@@ -42,7 +42,7 @@ sub get_all_revisions {
 
 #----------------------------------------------------------------------------
 
-=head2 CLASS->get_current_revision_date ( session, asset_id )
+=head2 CLASS->get_current_revision_date ( schema, asset_id )
 
 Get the most current revision date the user should see. If the user is inside
 of a version tag, show them their latest changes. Otherwise show the latest
@@ -53,7 +53,7 @@ committed version.
 sub get_current_revision_date {
     my ( $class, $session, $asset_id ) = @_;
     $session->log->info( sprintf 'Getting revision date for %s (%s)', $class, $asset_id );
-    my $schema = WebGUIx::Asset::Schema->connect( sub { $session->db->dbh } );
+    my $schema = $session->{schema};
 
     my %tag     = ();
     if ( my $tag = WebGUI::VersionTag->getWorking( $session, "nocreate" ) ) {
@@ -65,13 +65,15 @@ sub get_current_revision_date {
 
     my $row
         = $schema->resultset('Any')->search({
-            assetId => $asset_id,
-            -or => [
+            -and => [
+                assetId => $asset_id,
                 -or => [
-                    status      => { '!=' => "pending" },
-                    status      => \"IS NULL",
+                    -or => [
+                        status      => { '!=' => "pending" },
+                        status      => \"IS NULL",
+                    ],
+                    %tag,
                 ],
-                %tag,
             ],
         }, {
             order_by    => { -desc => 'revisionDate' },

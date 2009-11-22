@@ -78,9 +78,10 @@ sub hasChildren {
     return $self->has_children;
 }
 
-sub new {
-    my ( $class, @args ) = @_;
+around new => sub {
+    my ( $orig, $class, @args ) = @_;
     
+    # Being called by old WebGUI
     if ( Scalar::Util::blessed( $args[0] ) && $args[0]->isa('WebGUI::Session') ) {
         my ( $session, $assetId, $className, $revisionDate ) = @args;
         $session->log->info( 
@@ -101,9 +102,9 @@ sub new {
         $asset->session( $session );
         return $asset;
     }
-    else {
-        return $class->SUPER( @args );
-    }
-}
+
+    # Not being called by old WebGUI
+    return $class->$orig(@args);
+};
 
 1;

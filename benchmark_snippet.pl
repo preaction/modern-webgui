@@ -3,6 +3,10 @@ use strict;
 use warnings;
 use Benchmark;
 
+use lib '/data/WebGUI/lib';
+use lib '/data/WebGUI/t/lib';
+use lib 'lib';
+
 use WebGUI::Asset;
 use WebGUIx::Asset::Schema;
 use WebGUI::Test;
