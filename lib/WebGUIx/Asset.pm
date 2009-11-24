@@ -7,29 +7,33 @@ use WebGUIx::Constant;
 
 extends 'WebGUIx::Model';
 
-__PACKAGE__->load_components( qw{ VirtualColumns } );
-
 has 'session' => (
     is      => 'ro',
     isa     => 'WebGUI::Session',
 );
 
 has 'assetId' => (
-    traits  => [qw/ DB /],
+    traits  => [qw/ DB Form /],
     is      => 'ro',
     isa     => 'Str',
     db      => {
         primary_key     => 1,
         size            => 22,
     },
+    form    => {
+        field       => 'Text',
+    },
 );
 
 has 'revisionDate' => (
-    traits  => [qw/ DB /],
+    traits  => [qw/ DB Form /],
     is      => 'ro',
     isa     => 'Int',
     db      => {
         primary_key     => 1,
+    },
+    form    => {
+        field       => 'Text',
     },
 );
 

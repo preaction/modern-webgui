@@ -212,6 +212,14 @@ sub duplicate : Test(4) {
 
 #----------------------------------------------------------------------------
 
+sub get_edit_form : Test(1) {
+    my ( $self ) = @_;
+    ok(1);
+    note( $self->{asset}->get_edit_form );
+}
+
+#----------------------------------------------------------------------------
+
 sub get_parent : Test(2) {
     my ( $self ) = @_;
     is( $self->{asset}->tree->parentId, $WebGUIx::Constant::ASSETID_ROOT,

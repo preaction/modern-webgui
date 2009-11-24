@@ -2,13 +2,34 @@ package WebGUIx::Model;
 
 use Moose;
 use MooseX::Declare;
+use WebGUIx::Field;
 use WebGUIx::Meta::Attribute::Trait::DB;
+use WebGUIx::Meta::Attribute::Trait::Form;
 
 extends qw{ DBIx::Class };
 
 __PACKAGE__->load_components(qw{ VirtualColumns Core });
 
 # Base class for all WebGUI models
+
+sub get_edit_form {
+    my ( $self ) = @_;
+    my $html    = '';
+
+    for my $attr ( $self->meta->get_all_attributes ) {
+        if ( $attr->does('WebGUIx::Meta::Attribute::Trait::Form') ) {
+            my $class   = WebGUIx::Field->load( $attr->form->{field} );
+            my $name    = $attr->name;
+            my %props   = map { $_ => $attr->form->{$_} } 
+                        grep { $_ ne 'field' } 
+                        keys %{$attr->form};
+            my $field   = $class->new( name => $name, value => $self->$name, %props );
+            $html .= $field->to_html;
+        }
+    }
+
+    return $html;
+}
 
 sub table {
     my ( $class, $table ) = @_;
