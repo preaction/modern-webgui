@@ -1,10 +1,11 @@
 
 use MooseX::Declare;
-use WebGUIx::Field;
 
 role WebGUIx::Form::Role::HasFields 
     with WebGUIx::Form::Role::HasObjects 
 {
+    use WebGUIx::Field;
+
     has 'fields' => (
         is      => 'rw',
         isa     => 'HashRef[WebGUIx::Field]',

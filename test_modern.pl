@@ -9,14 +9,15 @@ use WebGUI::Session;
 
 my $session = WebGUI::Session->open( '/data/WebGUI', 'core.conf' );
 
-my $assets = WebGUIx::Asset::Schema->connect( sub { $session->db->dbh } );
+my $schema = WebGUIx::Asset::Schema->connect( sub { $session->db->dbh } );
+$session->{schema} = $schema;
 
 my $raw 
-    = $assets->resultset('RawContent')->create({
+    = $schema->resultset('RawContent')->create({
         session     => $session,
         content     => 'This is some content',
         data        => {
-            url         => 'my-new-url',
+            url         => 'rawcontent',
         },
     });
 

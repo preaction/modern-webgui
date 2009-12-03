@@ -41,9 +41,7 @@ sub load {
         return 'WebGUIx::Field::' . $load_class;
     }
     else {
-        print $load_class,"\n";
-        use Data::Dumper; print Dumper $INC{"WebGUIx/Field/Code.pm"};
-        confess sprintf "$@ Could not load field class %s", $load_class;
+        confess sprintf "Could not load field class %s", $load_class;
     }
 }
 

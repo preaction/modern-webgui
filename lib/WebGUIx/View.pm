@@ -27,23 +27,11 @@ Add a way to also edit related things
 sub edit {
     my ( $class, $self, %options ) = @_;
 
-    for my $attr ( $self->meta->get_all_attributes ) {
-        if ( $attr->does('WebGUIx::Meta::Attribute::Trait::Form') ) {
-            my $class   = WebGUIx::Field->load( $attr->form->{field} );
-            my $name    = $attr->name;
-            my %props   = map { $_ => $attr->form->{$_} } 
-                        grep { $_ ne 'field' } 
-                        keys %{$attr->form};
-            my $field   = $class->new( name => $name, value => $self->$name, %props );
-            $html .= $field->to_html;
-        }
-    }
-    
     if ( $options{relationships} && $self->result_source->relationships ) {
 
     }
     
-    return $html;
+    return $tmpl;
 }
 
 #----------------------------------------------------------------------------

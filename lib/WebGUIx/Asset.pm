@@ -38,24 +38,6 @@ has 'revisionDate' => (
     },
 );
 
-sub table {
-    my ( $class, $table ) = @_;
-    $class->SUPER::table( $table );
-    $class->belongs_to(
-        'data' => 'WebGUIx::Asset::Any',
-        { 
-            'foreign.assetId'         => 'self.assetId',
-            'foreign.revisionDate'    => 'self.revisionDate',
-        },
-    );
-    $class->belongs_to(
-        'tree' => 'WebGUIx::Asset::Tree',
-        { 
-            'foreign.assetId' => 'self.assetId'
-        },
-    );
-}
-
 #----------------------------------------------------------------------------
 
 =head2 can_add ( ?user|userId )
@@ -184,10 +166,12 @@ because it needs to be used for versioning.
 
 sub duplicate {
     my ( $self, $properties ) = @_;
-
-    my $new_id  = $self->session->id->generate;
+    my $parent      = $self->get_parent;
+    my $new_rank    = $self->get_next_sibling_rank;
+    my $new_id      = $self->session->id->generate;
+    my $new_lineage = sprintf '%s%06i', $parent->lineage, $new_rank;
     my $now     = time;
-    $self->tree->copy( { assetId => $new_id, lineage => $new_id } );
+    $self->tree->copy( { assetId => $new_id, lineage => $new_lineage } );
     my $copy = $self->copy( { assetId => $new_id, revisionDate => $now } );
     
     return $copy;
@@ -314,6 +298,29 @@ sub get_last_modified {
 
 #----------------------------------------------------------------------------
 
+=head2 get_next_sibling_rank ( )
+
+Get the next rank to create a new asset with
+
+=cut
+
+# XXX: Major hacks inside to work with old WebGUI assets
+sub get_next_sibling_rank {
+    my ( $self ) = @_;
+    my $high_rank_child   # Not using get_children in case of old WebGUI assets
+        = $self->session->{schema}->resultset('Tree')->search( {
+            parentId    => $self->tree->parentId,
+        }, { 
+            order_by    => {-desc => 'lineage'},
+            rows        => 1,
+        } )->single;
+    $high_rank_child->lineage =~ /0*([1-9]\d{0,5})$/;
+    my $rank    = $1 + 1; # Using lineage to determine rank in case of old WebGUI assets
+    return $rank;
+}
+
+#----------------------------------------------------------------------------
+
 =head2 get_parent ( )
 
 Get the parent asset.
@@ -322,9 +329,10 @@ Get the parent asset.
 
 sub get_parent { 
     my ( $self ) = @_;
-    return $self->result_source->schema->resultset('Any')->find({
+    return $self->result_source->schema->resultset('Tree')->find({
         assetId => $self->tree->parentId,
     });
+    # XXX: Cannot return as_asset because parent might be old WebGUI asset
 }
 
 #----------------------------------------------------------------------------
@@ -428,14 +436,21 @@ sub new {
     $attr->{ revisionDate           } ||= time;
     $attr->{ tree }{ assetId        } = $attr->{ assetId };
     $attr->{ tree }{ parentId       } ||= $WebGUIx::Constant::ASSETID_ROOT;
+    $attr->{ tree }{ lineage        } ||= $attr->{ assetId }; # Will fix this below
     $attr->{ tree }{ className      } = $class;
-    $attr->{ tree }{ lineage        } = $attr->{ assetId };
+    $attr->{ tree }{ state          } ||= "published";
     $attr->{ data }{ assetId        } = $attr->{ assetId };
     $attr->{ data }{ revisionDate   } = $attr->{ revisionDate };
     $attr->{ data }{ url            } ||= $attr->{ assetId };
     
     my $self = $class->next::method( $attr );
     
+    # Generate a rank and lineage based on parent
+    if ( $self->tree->lineage eq $self->assetId ) {
+        $self->tree->rank( $self->get_next_sibling_rank );
+        $self->tree->lineage( sprintf '%s%06i', $self->get_parent->lineage, $self->tree->rank );
+    }
+
     return $self;
 }
 
@@ -444,8 +459,9 @@ sub new {
 =head2 prepare_view ( )
 
 Prepare the template to be used in the L<view()> method. This allows us to do
-as much as possible before the hard work of L<view()>. Returns a reference to 
-a L<WebGUIx::Asset::Template> object.
+as much as possible before the hard work of L<view()>. Also allows us to add
+items to the <head> of the response. Returns a reference to a 
+L<WebGUIx::Asset::Template> object.
 
 =cut
 
@@ -470,8 +486,6 @@ sub paste {
 #----------------------------------------------------------------------------
 #sub process_edit_form { ... }
 #----------------------------------------------------------------------------
-#sub process_style { ... }
-#----------------------------------------------------------------------------
 #sub publish { ... }
 #----------------------------------------------------------------------------
 
@@ -480,6 +494,41 @@ sub paste {
 Get or set the WebGUI::Session object attached to this Asset.
 
 =cut
+
+#----------------------------------------------------------------------------
+
+=head2 table ( table_name )
+
+Set the table name for this asset. Must be called during loading after all 
+attributes have been added:
+
+ has 'attr' => (
+    traits  => [qw{ DB }],
+    is      => 'rw',
+    isa     => 'Str',
+ );
+
+ __PACKAGE__->table("table_name")
+
+=cut 
+
+sub table {
+    my ( $class, $table ) = @_;
+    $class->SUPER::table( $table );
+    $class->belongs_to(
+        'data' => 'WebGUIx::Asset::Any',
+        { 
+            'foreign.assetId'         => 'self.assetId',
+            'foreign.revisionDate'    => 'self.revisionDate',
+        },
+    );
+    $class->belongs_to(
+        'tree' => 'WebGUIx::Asset::Tree',
+        { 
+            'foreign.assetId' => 'self.assetId'
+        },
+    );
+}
 
 #----------------------------------------------------------------------------
 
@@ -526,7 +575,9 @@ sub www_add {
 
 sub www_edit { 
     my ( $self, $session, %args ) = @_;
-    return WebGUIx::View->edit( $self, { relationships => 1 } );
+    my $tmpl    = WebGUIx::Template::File->new( file => 'asset/edit.html' );
+    $tmpl->add_form( $self->get_edit_form );
+    return $tmpl;
 }
 
 #----------------------------------------------------------------------------

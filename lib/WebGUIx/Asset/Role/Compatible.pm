@@ -85,9 +85,6 @@ around new => sub {
     # Being called by old WebGUI
     if ( Scalar::Util::blessed( $args[0] ) && $args[0]->isa('WebGUI::Session') ) {
         my ( $session, $assetId, $className, $revisionDate ) = @args;
-        $session->log->info( 
-            sprintf 'Trying to instantiate asset %s %s %s', $className, $assetId, $revisionDate 
-        );
 
         my $schema;
         unless ( $schema = $session->{_schema} ) {
@@ -106,6 +103,12 @@ around new => sub {
         });
         my $asset   = $row->as_asset;
         $asset->session( $session );
+        $session->log->info( 
+            sprintf 'Trying to instantiate asset %s %s %s', $className, $assetId, $revisionDate 
+        );
+        $session->log->info( 
+            sprintf 'Got asset %s %s %s', $asset->assetId, $asset->data->url, ref( $asset ),
+        );
         return $asset;
     }
 
@@ -117,8 +120,12 @@ around www_edit => sub {
     my ( $orig, $self, @args ) = @_;
 
     my $tmpl = $self->$orig(@args);
-    
-    return $tmpl->print;
+    # XXX: This needs to be in config file
+    $tmpl->tt_options->{INCLUDE_PATH} = "/data/modern-webgui/tmpl"; 
+    $tmpl->process( $self->session->request )
+    || $self->session->log->error("Couldn't process template: " . $tmpl->error );
+
+    return 'chunked';
 };
 
 1;

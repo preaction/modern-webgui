@@ -26,7 +26,7 @@ __PACKAGE__->add_columns(qw{
 
 sub www_view {
     my ( $self ) = @_;
-
+    return $self->content;
     return $self->usePacked ? $self->contentPacked : $self->content;
 }
 
