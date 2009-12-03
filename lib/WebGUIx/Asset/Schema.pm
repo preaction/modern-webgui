@@ -11,7 +11,8 @@ my $exclude = qr{
 }x;
 my @assets  = grep { !/$exclude/ } findallmod 'WebGUIx::Asset';
 __PACKAGE__->load_classes( {
-    'WebGUIx::Asset' => [ map { s/WebGUIx::Asset:://; $_ } @assets ]
+    'WebGUIx::Asset' => [ map { s/WebGUIx::Asset:://; $_ } @assets ],
+    'WebGUIx::Template' => [ qw{ Asset } ],
 } );
 
 1;

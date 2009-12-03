@@ -12,7 +12,8 @@ has 'name' => (
 );
 
 has 'value' => (
-    is => 'rw',
+    is      => 'rw',
+    default => undef,
 );
 
 =head2 load ( class )
@@ -33,15 +34,22 @@ sub load {
     $file .= ".pm";
 
     # Load the class
-    if ( try { require $file; } ) {
+    if ( $INC{$file} || try { require $file; } ) {
         return $load_class;
     }
-    elsif ( try { require 'WebGUIx/Field/' . $file } ) {
+    elsif ( $INC{'WebGUIx/Field/'.$file} || try { require 'WebGUIx/Field/' . $file } ) {
         return 'WebGUIx::Field::' . $load_class;
     }
     else {
-        confess sprintf "Could not load field class %s", $load_class;
+        print $load_class,"\n";
+        use Data::Dumper; print Dumper $INC{"WebGUIx/Field/Code.pm"};
+        confess sprintf "$@ Could not load field class %s", $load_class;
     }
+}
+
+sub print {
+    my ( $self ) = @_;
+    return sprintf 'Field: %s Value %s' . "\n", $self->name, $self->value;
 }
 
 1;

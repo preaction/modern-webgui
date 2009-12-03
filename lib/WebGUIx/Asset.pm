@@ -4,6 +4,7 @@ use Carp qw( croak );
 use Moose;
 use URI;
 use WebGUIx::Constant;
+use WebGUIx::View::Asset;
 
 extends 'WebGUIx::Model';
 
@@ -39,7 +40,7 @@ has 'revisionDate' => (
 
 sub table {
     my ( $class, $table ) = @_;
-    $class->next::method( $table );
+    $class->SUPER::table( $table );
     $class->belongs_to(
         'data' => 'WebGUIx::Asset::Any',
         { 
@@ -239,7 +240,7 @@ sub get_container {
 
 #----------------------------------------------------------------------------
 
-=head2 CLASS->get_current_revision_date ( schema, assetId )
+=head2 CLASS->get_current_revision_date ( session, assetId )
 
 Get the most recent revision date the user is allowed to see. This is a class
 method used to create asset instances when we don't know what revision date
@@ -248,7 +249,8 @@ to use.
 =cut
 
 sub get_current_revision_date {
-    my ( $class, $schema, $assetId ) = @_;
+    my ( $class, $session, $assetId ) = @_;
+    my $schema = $session->{schema};
     return $schema->resultset('Any')->search(
         {
             assetId     => $assetId,
@@ -286,7 +288,14 @@ sub get_descendants {
 }
 
 #----------------------------------------------------------------------------
-#sub get_edit_form { ... }
+
+override get_edit_form => sub { 
+    my ( $self ) = @_;
+    my $form = super();
+    $form->name( "edit" );
+    return $form;
+};
+
 #----------------------------------------------------------------------------
 
 =head2 get_last_modified ( )
@@ -502,7 +511,11 @@ sub view {
 
 #----------------------------------------------------------------------------
 
-#sub www_add { ... }
+sub www_add {
+    my ( $self, $session, %args ) = @_
+
+}
+
 #----------------------------------------------------------------------------
 #sub www_add_save { ... }
 #----------------------------------------------------------------------------
@@ -510,7 +523,12 @@ sub view {
 #----------------------------------------------------------------------------
 #sub www_cut { ... }
 #----------------------------------------------------------------------------
-#sub www_edit { ... }
+
+sub www_edit { 
+    my ( $self, $session, %args ) = @_;
+    return WebGUIx::View->edit( $self, { relationships => 1 } );
+}
+
 #----------------------------------------------------------------------------
 #sub www_edit_save { ... }
 #----------------------------------------------------------------------------

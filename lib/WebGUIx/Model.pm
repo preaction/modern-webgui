@@ -1,8 +1,11 @@
 package WebGUIx::Model;
 
+# Base class for all WebGUI models
+
 use Moose;
 use MooseX::Declare;
 use WebGUIx::Field;
+use WebGUIx::Form;
 use WebGUIx::Meta::Attribute::Trait::DB;
 use WebGUIx::Meta::Attribute::Trait::Form;
 
@@ -10,25 +13,24 @@ extends qw{ DBIx::Class };
 
 __PACKAGE__->load_components(qw{ VirtualColumns Core });
 
-# Base class for all WebGUI models
-
 sub get_edit_form {
     my ( $self ) = @_;
-    my $html    = '';
-
+    my $form    = WebGUIx::Form->new;
+    
     for my $attr ( $self->meta->get_all_attributes ) {
         if ( $attr->does('WebGUIx::Meta::Attribute::Trait::Form') ) {
-            my $class   = WebGUIx::Field->load( $attr->form->{field} );
-            my $name    = $attr->name;
-            my %props   = map { $_ => $attr->form->{$_} } 
-                        grep { $_ ne 'field' } 
-                        keys %{$attr->form};
-            my $field   = $class->new( name => $name, value => $self->$name, %props );
-            $html .= $field->to_html;
+            my $class   = $attr->form->{field};
+            my %params  =  
+                map { $_ => $attr->form->{$_} } 
+                grep { $_ ne 'field' }
+                keys %{ $attr->form }
+                ;
+            $params{name} = $attr->name;
+            $form->add_field( $class, %params );
         }
     }
 
-    return $html;
+    return $form;
 }
 
 sub table {
@@ -42,7 +44,7 @@ sub table {
     for my $attr ( $meta->get_all_attributes ) {
         if ( $attr->does('WebGUIx::Meta::Attribute::Trait::DB') ) {
             $class->add_column( $attr->name );
-            if ( $attr->db->{primary_key} ) {
+            if ( $attr->db && $attr->db->{primary_key} ) {
                 push @primary_key, $attr->name;
             }
         }

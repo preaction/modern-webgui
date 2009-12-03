@@ -215,7 +215,16 @@ sub duplicate : Test(4) {
 sub get_edit_form : Test(1) {
     my ( $self ) = @_;
     ok(1);
-    note( $self->{asset}->get_edit_form );
+    #note( $self->{asset}->get_edit_form->print );
+    use WebGUIx::Template::File;
+    my $tmpl    = WebGUIx::Template::File->new( 
+        file => 'edit_asset.tmpl',
+        tt_options => {
+            INCLUDE_PATH => '/data/modern-webgui/tmpl',
+        },
+    );
+    $tmpl->add_form( $self->{asset}->get_edit_form );
+    $tmpl->process or die( $tmpl->error );
 }
 
 #----------------------------------------------------------------------------

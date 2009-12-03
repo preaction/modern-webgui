@@ -3,6 +3,7 @@ package WebGUIx::Asset::Role::Compatible;
 # Compatibility with existing WebGUI API
 
 use Moose::Role;
+use WebGUIx::Asset::Schema;
 
 sub canEdit {
     my ( $self, @args ) = @_;
@@ -87,7 +88,12 @@ around new => sub {
         $session->log->info( 
             sprintf 'Trying to instantiate asset %s %s %s', $className, $assetId, $revisionDate 
         );
-        my $schema  = WebGUIx::Asset::Schema->connect( sub { $session->db->dbh } );
+
+        my $schema;
+        unless ( $schema = $session->{_schema} ) {
+            $schema = $session->{_schema} 
+                    = WebGUIx::Asset::Schema->connect( sub { $session->db->dbh } );
+        }
         
         my %revisionDate    = ();
         if ( $revisionDate ) {
@@ -105,6 +111,14 @@ around new => sub {
 
     # Not being called by old WebGUI
     return $class->$orig(@args);
+};
+
+around www_edit => sub {
+    my ( $orig, $self, @args ) = @_;
+
+    my $tmpl = $self->$orig(@args);
+    
+    return $tmpl->print;
 };
 
 1;
