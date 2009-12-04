@@ -18,6 +18,7 @@ my $raw
         content     => 'This is some content',
         data        => {
             url         => 'rawcontent',
+            status      => 'approved',
         },
     });
 

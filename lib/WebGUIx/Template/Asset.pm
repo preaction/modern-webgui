@@ -9,6 +9,7 @@ has 'template' => (
     traits  => [qw{ DB Form }],
     is      => 'rw',
     isa     => 'Str',
+    default => '',
     form    => {
         field       => 'Code',
     },

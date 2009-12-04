@@ -5,6 +5,7 @@ use Moose;
 use URI;
 use WebGUIx::Constant;
 use WebGUIx::View::Asset;
+use WebGUIx::Template::File;
 
 extends 'WebGUIx::Model';
 
@@ -22,7 +23,7 @@ has 'assetId' => (
         size            => 22,
     },
     form    => {
-        field       => 'Text',
+        field       => 'Readonly',
     },
 );
 
@@ -34,7 +35,7 @@ has 'revisionDate' => (
         primary_key     => 1,
     },
     form    => {
-        field       => 'Text',
+        field       => 'Readonly',
     },
 );
 
@@ -484,7 +485,18 @@ sub paste {
 }
 
 #----------------------------------------------------------------------------
-#sub process_edit_form { ... }
+
+sub process_edit_form {
+    my ( $self, $session ) = @_;
+
+    for my $attr ( $self->meta->get_all_attributes ) {
+        next unless $attr->does('WebGUIx::Meta::Attribute::Trait::Form');
+        next if $attr->form->{field} eq 'Readonly';
+        my $name    = $attr->name;
+        $self->$name( $self->get_edit_form->fields->{$name}->get_value( $session ) );
+    }
+}
+
 #----------------------------------------------------------------------------
 #sub publish { ... }
 #----------------------------------------------------------------------------
@@ -576,12 +588,26 @@ sub www_add {
 sub www_edit { 
     my ( $self, $session, %args ) = @_;
     my $tmpl    = WebGUIx::Template::File->new( file => 'asset/edit.html' );
-    $tmpl->add_form( $self->get_edit_form );
+    my $form    = $self->get_edit_form;
+    $form->name( 'edit_asset' );
+    $form->action( $self->get_url );
+    $form->add_field( 'Hidden', name => 'func', value => 'edit_save', );
+    $form->add_field( 'Submit', name => 'save', label => 'Save', );
+    $tmpl->add_form($form);
     return $tmpl;
 }
 
 #----------------------------------------------------------------------------
-#sub www_edit_save { ... }
+
+sub www_edit_save { 
+    my ( $self ) = @_;
+    
+    $self->process_edit_form( $self->session );
+
+    return sprintf 'Your content has been saved. <a href="%s">Back to View</a>', 
+        $self->get_url;
+}
+
 #----------------------------------------------------------------------------
 #sub www_paste { ... }
 #----------------------------------------------------------------------------

@@ -16,6 +16,29 @@ has 'value' => (
     default => undef,
 );
 
+has 'type' => (
+    is      => 'rw',
+    isa     => 'Str',
+    default => undef,
+);
+
+=head1 METHODS
+
+#----------------------------------------------------------------------------
+
+=head2 get_value ( session )
+
+Get the value from the form.
+
+=cut
+
+sub get_value {
+    my ( $self, $session ) = @_;
+    return $session->form->get( $self->name );
+}
+
+#----------------------------------------------------------------------------
+
 =head2 load ( class )
 
 Load a field class. C<class> can be a full or partial class name. Partial
@@ -34,20 +57,26 @@ sub load {
     $file .= ".pm";
 
     # Load the class
-    if ( $INC{$file} || try { require $file; } ) {
-        return $load_class;
-    }
-    elsif ( $INC{'WebGUIx/Field/'.$file} || try { require 'WebGUIx/Field/' . $file } ) {
+    # Try to load the WebGUIx::Field in case we conveniently overlap with a common name
+    # (like Readonly)
+    if ( $INC{'WebGUIx/Field/'.$file} || try { require 'WebGUIx/Field/' . $file } ) {
         return 'WebGUIx::Field::' . $load_class;
+    }
+    elsif ( $INC{$file} || try { require $file; } ) {
+        return $load_class;
     }
     else {
         confess sprintf "Could not load field class %s", $load_class;
     }
 }
 
+#----------------------------------------------------------------------------
+
 sub print {
     my ( $self ) = @_;
-    return sprintf 'Field: %s Value %s' . "\n", $self->name, $self->value;
+    return sprintf '<input type="%s" name="%s" value="%s" %s />',
+        $self->type, $self->name, $self->value
+        ;
 }
 
 1;

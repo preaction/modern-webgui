@@ -5,11 +5,51 @@ extends qw{ WebGUIx::Asset };
 with 'WebGUIx::Asset::Role::Versioning';
 with 'WebGUIx::Asset::Role::Compatible';
 
+has 'content' => (
+    is      => 'rw',
+    isa     => 'Str',
+    traits  => [qw{ DB Form }],
+    form    => {
+        field       => 'Textarea',
+    },
+);
+
+has 'mimeType' => (
+    is      => 'rw',
+    isa     => 'Str',
+    traits  => [qw{ DB Form }],
+    default => 'text/plain',
+    form    => {
+        field       => 'Text',
+    },
+);
+
+has 'cacheTimeout' => (
+    is      => 'rw',
+    isa     => 'Int',
+    traits  => [qw{ DB Form }],
+    default => 0,
+    form    => {
+        field       => 'Text',
+    },
+);
+
+has 'contentPacked' => (
+    is      => 'rw',
+    isa     => 'Str',
+    traits  => [qw{ DB }],
+);
+
+has 'usePacked' => (
+    is      => 'rw',
+    isa     => 'Bool',
+    traits  => [qw{ DB Form }],
+    form    => {
+        field       => 'Boolean',
+    },
+);
+
 __PACKAGE__->table( 'RawContent' );
-__PACKAGE__->add_columns(qw{ 
-    content mimeType cacheTimeout
-    contentPacked usePacked
-});
 
 # CREATE TABLE RawContent ( 
 #   assetId CHAR(22) BINARY NOT NULL, 

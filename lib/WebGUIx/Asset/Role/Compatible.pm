@@ -103,12 +103,6 @@ around new => sub {
         });
         my $asset   = $row->as_asset;
         $asset->session( $session );
-        $session->log->info( 
-            sprintf 'Trying to instantiate asset %s %s %s', $className, $assetId, $revisionDate 
-        );
-        $session->log->info( 
-            sprintf 'Got asset %s %s %s', $asset->assetId, $asset->data->url, ref( $asset ),
-        );
         return $asset;
     }
 
@@ -122,10 +116,11 @@ around www_edit => sub {
     my $tmpl = $self->$orig(@args);
     # XXX: This needs to be in config file
     $tmpl->tt_options->{INCLUDE_PATH} = "/data/modern-webgui/tmpl"; 
-    $tmpl->process( $self->session->request )
+    my $output = '';
+    $tmpl->process(\$output)
     || $self->session->log->error("Couldn't process template: " . $tmpl->error );
-
-    return 'chunked';
+    $self->session->log->error("OUTPUT: $output");
+    return $output;
 };
 
 1;

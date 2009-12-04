@@ -308,4 +308,23 @@ sub session {
     return WebGUI::Test->session;
 }
 
+#----------------------------------------------------------------------------
+
+sub www_edit : Test(1) {
+    my ( $self ) = @_;
+    ok(1);
+    note( $self->{asset}->www_edit );
+}
+
+#----------------------------------------------------------------------------
+
+sub www_edit_save : Test(1) {
+    my ( $self ) = @_;
+    ok(1);
+    $self->session->request->setup_body({
+        content     => 'New',
+    });
+    note( $self->{asset}->www_edit_save );
+}
+
 1;
