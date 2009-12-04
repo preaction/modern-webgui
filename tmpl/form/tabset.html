@@ -2,11 +2,11 @@
 <div id="[% tabset.name %]" class="yui-navset">
     <ul class="yui-nav">
 [% FOREACH tab IN tabset.tabs %]
-        [% IF loop.count == 1 %]
+[% IF loop.count == 1 %]
         <li class="selected">
-        [% ELSE %]
+[% ELSE %]
         <li>
-        [% END %]
+[% END %]
             <a href="#tab[% loop.count %]"><em>[% tab.label %]</em></a>
         </li>
 [% END %]
@@ -19,6 +19,7 @@
 </div>
 <script src="http://yui.yahooapis.com/2.8.0r4/build/yuiloader/yuiloader-min.js"></script>
 <script type="text/javascript">
+// Note: TabView does not work in sandbox
 var loader = new YAHOO.util.YUILoader({
     require: ["tabview"], 
     onSuccess: function(o) {

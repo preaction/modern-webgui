@@ -279,7 +279,10 @@ sub get_descendants {
 override get_edit_form => sub { 
     my ( $self ) = @_;
     my $form = super();
-    $form->name( "edit" );
+    $form->name( "edit_asset" );
+
+    # XXX Add Data and Tree relationships
+
     return $form;
 };
 
@@ -497,6 +500,8 @@ sub process_edit_form {
         my $name    = $attr->name;
         $self->$name( $var->{$name} );
     }
+
+    # XXX: Add Data and Tree relationships
 }
 
 #----------------------------------------------------------------------------
@@ -591,7 +596,6 @@ sub www_edit {
     my ( $self, $session, %args ) = @_;
     my $tmpl    = WebGUIx::Template::File->new( file => 'asset/edit.html' );
     my $form    = $self->get_edit_form;
-    $form->name( 'edit_asset' );
     $form->action( $self->get_url );
     $form->add_field( 'Hidden', name => 'func', value => 'edit_save', );
     $form->add_field( 'Submit', name => 'save', label => 'Save', );
