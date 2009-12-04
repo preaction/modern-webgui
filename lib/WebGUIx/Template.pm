@@ -44,7 +44,8 @@ sub process {
     for my $form ( @{$self->forms} ) {
         $var{forms}{$form->name} = $form;
     }
-    return $self->tt->process( $self->get_template, \%var, @args );
+    return $self->tt->process( $self->get_template, \%var, @args )
+        || confess( "Could not process template: " . $self->tt->error );
 }
 
 1;

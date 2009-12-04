@@ -8,4 +8,9 @@ has 'type' => (
     default     => 'hidden',
 );
 
+sub print {
+    my ( $self ) = @_;
+    return $self->get_html;
+}
+
 1;

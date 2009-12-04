@@ -32,17 +32,27 @@ has 'enctype' => (
 
 # More HTML attributes
 
-sub print {
+sub foot {
+    my ( $self ) = @_;
+    return '</form>';
+}
+
+sub head {
     my ( $self ) = @_;
     my @html_attrs = qw(
         name action method enctype
     );
-    my $html
-        = sprintf( '<form %s>', 
+    return sprintf( '<form %s>', 
             join " ", map { $_ . q{="} . $self->$_ . q{"} } grep { $self->$_ } @html_attrs 
-        )
+        );
+}
+
+sub print {
+    my ( $self ) = @_;
+    my $html
+        = $self->head
         . $self->print_objects
-        . '</form>'
+        . $self->foot
         ;
     return $html;
 }

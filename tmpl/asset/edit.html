@@ -1,1 +1,45 @@
-[% forms.edit_asset.print() %]
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+<head>
+    <title>Editing [% asset.title %]</title>
+    <style type="text/css">
+        label, input, textarea {
+            display         : block;
+        }
+        
+        textarea {
+            height      : 16em;
+            width       : 60em;
+        }
+
+        label {
+            font-family : Verdana, Arial, sans-serif;
+            font-size   : 10pt;
+            font-weight : bold;
+            margin-bottom   : 0.75em;
+        }
+
+        label.boolean, label.boolean input {
+            display         : inline;
+            font-weight     : normal;
+        }
+
+        #buttons {
+            position        : absolute;
+            right           : 10px;
+            top             : 5px;
+        }
+    </style>
+</head>
+<body class="yui-skin-sam">
+[% forms.edit_asset.head %]
+[% FOREACH obj IN forms.edit_asset.objects %]
+    [% IF obj.name == "save" %]
+        <div id="buttons">[% obj.print() %]</div>
+    [% ELSE %]
+        [% obj.print() %]
+    [% END %]
+[% END %]
+[% forms.edit_asset.foot %]
+</body>
+</html>

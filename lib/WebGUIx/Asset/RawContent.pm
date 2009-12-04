@@ -11,6 +11,7 @@ has 'content' => (
     traits  => [qw{ DB Form }],
     form    => {
         field       => 'Textarea',
+        tab         => 'properties',
     },
 );
 
@@ -21,6 +22,7 @@ has 'mimeType' => (
     default => 'text/plain',
     form    => {
         field       => 'Text',
+        tab         => 'properties',
     },
 );
 
@@ -31,6 +33,7 @@ has 'cacheTimeout' => (
     default => 0,
     form    => {
         field       => 'Text',
+        tab         => 'properties',
     },
 );
 
@@ -46,6 +49,7 @@ has 'usePacked' => (
     traits  => [qw{ DB Form }],
     form    => {
         field       => 'Boolean',
+        tab         => 'properties',
     },
 );
 

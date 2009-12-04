@@ -5,6 +5,13 @@ package WebGUIx::Field;
 use Moose;
 use Try::Tiny;
 
+has 'label' => (
+    is      => 'rw',
+    isa     => 'Str',
+    default => sub { ucfirst shift->name },
+    lazy    => 1,
+);
+
 has 'name' => (
     is => 'ro',
     isa => 'Str',
@@ -23,6 +30,21 @@ has 'type' => (
 );
 
 =head1 METHODS
+
+#----------------------------------------------------------------------------
+
+=head2 get_html ( ) 
+
+Get the HTML for this field
+
+=cut
+
+sub get_html {
+    my ( $self ) = @_;
+    return sprintf '<input type="%s" name="%s" value="%s" %s />',
+        $self->type, $self->name, $self->value
+        ;
+}
 
 #----------------------------------------------------------------------------
 
@@ -74,9 +96,7 @@ sub load {
 
 sub print {
     my ( $self ) = @_;
-    return sprintf '<input type="%s" name="%s" value="%s" %s />',
-        $self->type, $self->name, $self->value
-        ;
+    return sprintf '<label>%s<br/>%s</label>', $self->label, $self->get_html;
 }
 
 1;

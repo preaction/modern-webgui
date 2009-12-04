@@ -116,10 +116,10 @@ around www_edit => sub {
     my $tmpl = $self->$orig(@args);
     # XXX: This needs to be in config file
     $tmpl->tt_options->{INCLUDE_PATH} = "/data/modern-webgui/tmpl"; 
+
     my $output = '';
     $tmpl->process(\$output)
     || $self->session->log->error("Couldn't process template: " . $tmpl->error );
-    $self->session->log->error("OUTPUT: $output");
     return $output;
 };
 

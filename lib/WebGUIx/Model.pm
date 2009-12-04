@@ -93,19 +93,36 @@ You will need to fill in an action and handle processing yourself.
 sub get_edit_form {
     my ( $self ) = @_;
     my $form    = WebGUIx::Form->new;
-    
-    for my $attr ( $self->meta->get_all_attributes ) {
-        if ( $attr->does('WebGUIx::Meta::Attribute::Trait::Form') ) {
-            my $class   = $attr->form->{field};
-            my $name    = $attr->name;
-            my %params  =  
-                map { $_ => $attr->form->{$_} } 
-                grep { $_ ne 'field' }
-                keys %{ $attr->form }
-                ;
-            $params{ name   } = $name;
-            # MooseX::Method::Signatures has problems with undef in a hash, so disallow undef in default value
-            $params{ value  } = $self->$name || ''; 
+   
+    no warnings qw{ uninitialized };
+    my @attrs   = sort { $a->form->{order} <=> $b->form->{order} }
+                  grep { $_->does('WebGUIx::Meta::Attribute::Trait::Form') }
+                  $self->meta->get_all_attributes
+                  ;
+    use warnings qw{ uninitialized };
+
+    for my $attr ( @attrs ) {
+        my $class   = $attr->form->{field};
+        my $name    = $attr->name;
+        my %params  =  
+            map { $_ => $attr->form->{$_} } 
+            grep { $_ ne 'field' && $_ ne 'tab' }
+            keys %{ $attr->form }
+            ;
+        $params{ name   } = $name;
+        # XXX: MooseX::Method::Signatures has problems with undef in a 
+        # hash, so disallow undef in default value
+        $params{ value  } = $self->$name || ''; 
+        if ( $attr->form->{tab} ) {
+            my $tab_name    = $attr->form->{tab};
+            if ( !$form->get_tab( $tab_name ) ) {
+                $form->add_tab( name => $tab_name );
+            }
+            $form->get_tab($tab_name)->add_field(
+                $class, %params,
+            );
+        }
+        else {
             $form->add_field( $class, %params );
         }
     }

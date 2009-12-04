@@ -19,6 +19,20 @@ role WebGUIx::Form::Role::HasFields
         $self->fields->{$field->name} = $field;
         return $field;
     }
+
+    method process ( $session ) {
+        my %var = ();
+        for my $obj ( @{$self->objects} ) {
+            if ( $obj->isa('WebGUIx::Field') ) {
+                $var{ $obj->name } = $obj->get_value( $session );
+            }
+            else {
+                %var = ( %var, %{$obj->process( $session )} );
+            }
+        }
+        return \%var;
+    }
+
 }
 
 1;

@@ -24,6 +24,7 @@ has 'assetId' => (
     },
     form    => {
         field       => 'Readonly',
+        tab         => 'metadata',
     },
 );
 
@@ -36,6 +37,7 @@ has 'revisionDate' => (
     },
     form    => {
         field       => 'Readonly',
+        tab         => 'metadata',
     },
 );
 
@@ -488,12 +490,12 @@ sub paste {
 
 sub process_edit_form {
     my ( $self, $session ) = @_;
-
+    my $var = $self->get_edit_form->process( $session );
     for my $attr ( $self->meta->get_all_attributes ) {
         next unless $attr->does('WebGUIx::Meta::Attribute::Trait::Form');
         next if $attr->form->{field} eq 'Readonly';
         my $name    = $attr->name;
-        $self->$name( $self->get_edit_form->fields->{$name}->get_value( $session ) );
+        $self->$name( $var->{$name} );
     }
 }
 
@@ -594,6 +596,7 @@ sub www_edit {
     $form->add_field( 'Hidden', name => 'func', value => 'edit_save', );
     $form->add_field( 'Submit', name => 'save', label => 'Save', );
     $tmpl->add_form($form);
+    $tmpl->var->{asset} = $self;
     return $tmpl;
 }
 
@@ -603,6 +606,7 @@ sub www_edit_save {
     my ( $self ) = @_;
     
     $self->process_edit_form( $self->session );
+    $self->update;
 
     return sprintf 'Your content has been saved. <a href="%s">Back to View</a>', 
         $self->get_url;

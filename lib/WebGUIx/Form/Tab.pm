@@ -14,6 +14,13 @@ has 'name' => (
 has 'label' => (
     is      => 'rw',
     isa     => 'Str',
+    lazy    => 1,
+    default => sub { return ucfirst shift->name },
 );
+
+sub print {
+    my ( $self ) = @_;
+    return $self->print_objects;
+}
 
 1;

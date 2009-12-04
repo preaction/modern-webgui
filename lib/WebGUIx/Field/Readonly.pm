@@ -3,7 +3,7 @@ package WebGUIx::Field::Readonly;
 use Moose;
 extends 'WebGUIx::Field';
 
-sub print {
+sub get_html {
     my ( $self ) = @_;
     return $self->value;
 }
