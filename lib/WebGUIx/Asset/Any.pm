@@ -3,12 +3,129 @@ package WebGUIx::Asset::Any;
 use Moose;
 extends qw{ WebGUIx::Model };
 
+has 'assetId' => (
+    traits  => [qw/ DB /],
+    is      => 'ro',
+    isa     => 'Str',
+    db      => {
+        primary_key     => 1,
+        size            => 22,
+    },
+);
+
+has 'revisionDate' => (
+    traits  => [qw/ DB /],
+    is      => 'ro',
+    isa     => 'Int',
+    db      => {
+        primary_key     => 1,
+    },
+);
+
+has 'title' => (
+    traits  => [qw/ DB Form /],
+    is      => 'rw',
+    isa     => 'Str',
+    form    => {
+        field       => 'Text',
+        tab         => 'properties',
+    },
+);
+
+has 'menuTitle' => (
+    traits  => [qw/ DB Form /],
+    is      => 'rw',
+    isa     => 'Str',
+    form    => {
+        field       => 'Text',
+        tab         => 'properties',
+    },
+);
+
+has 'url' => (
+    traits      => [qw/ DB Form /],
+    is          => 'rw',
+    isa         => 'Str',
+    form        => {
+        field       => 'Text',
+        tab         => 'properties',
+    },
+);
+
+has 'groupIdView' => (
+    traits      => [qw/ DB Form /],
+    is          => 'rw',
+    isa         => 'Str',
+    db          => {
+        size        => 22,
+    },
+    form        => {
+        field       => 'Group',
+        tab         => 'security',
+    },
+);
+
+has 'groupIdEdit' => (
+    traits      => [qw/ DB Form /],
+    is          => 'rw',
+    isa         => 'Str',
+    db          => {
+        size        => 22,
+    },
+    form        => {
+        field       => 'Group',
+        tab         => 'security',
+    },
+);
+
+has 'synopsis' => (
+    traits      => [qw/ DB Form /],
+    is          => 'rw',
+    isa         => 'Str',
+    form        => {
+        field       => 'Textarea',
+        tab         => 'metadata',
+    },
+);
+
+has 'ownerUserId' => (
+    traits      => [qw/ DB Form /],
+    is          => 'rw',
+    isa         => 'Str',
+    db          => {
+        size        => 22,
+    },
+    form        => {
+        field       => 'User',
+        tab         => 'security',
+    },
+);
+
+has 'status' => (
+    traits      => [qw/ DB /],
+    is          => 'rw',
+    isa         => 'Str',
+);
+
+has 'tagId' => (
+    traits      => [qw/ DB /],
+    is          => 'rw',
+    isa         => 'Str',
+    db          => {
+        size        => 22,
+    },
+);
+
+has 'revisedBy' => (
+    traits      => [qw/ DB /],
+    is          => 'rw',
+    isa         => 'Str',
+    db          => {
+        size        => 22,
+    },
+);
+
 __PACKAGE__->table( 'assetData' );
-__PACKAGE__->add_columns(qw{
-    assetId revisionDate revisedBy tagId status title menuTitle url 
-    ownerUserId groupIdView groupIdEdit synopsis
-});
-__PACKAGE__->set_primary_key( 'assetId', 'revisionDate' );
 __PACKAGE__->belongs_to(
     'tree' => 'WebGUIx::Asset::Tree',
     { 

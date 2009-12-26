@@ -52,7 +52,7 @@ committed version.
 
 sub get_current_revision_date {
     my ( $class, $session, $asset_id ) = @_;
-    my $schema = $session->{schema};
+    my $schema = $session->{_schema};
 
     my %tag     = ();
     if ( my $tag = WebGUI::VersionTag->getWorking( $session, "nocreate" ) ) {

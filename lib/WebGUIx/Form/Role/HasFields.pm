@@ -6,28 +6,38 @@ role WebGUIx::Form::Role::HasFields
 {
     use WebGUIx::Field;
 
+    requires 'session';
+
     has 'fields' => (
         is      => 'rw',
         isa     => 'HashRef[WebGUIx::Field]',
         default => sub { {} },
     );
 
-    method add_field ( Str $class!, %params ) {
-        $class = WebGUIx::Field->load( $class );
-        my $field = $class->new( %params );
+    method add_field ( @args ) {
+        my $field;
+        if ( scalar @args == 1 && $args[0]->isa( 'WebGUIx::Field' ) ) {
+            $field  = $args[0];
+        }
+        else {
+            my $class = WebGUIx::Field->load( $args[0] );
+            my %params = @args[1..$#args];
+            $params{ session } = $self->session;
+            $field = $class->new( %params );
+        }
         push @{$self->objects}, $field;
         $self->fields->{$field->name} = $field;
         return $field;
     }
 
-    method process ( $session ) {
+    method process () {
         my %var = ();
         for my $obj ( @{$self->objects} ) {
             if ( $obj->isa('WebGUIx::Field') ) {
-                $var{ $obj->name } = $obj->get_value( $session );
+                $var{ $obj->name } = $obj->get_value;
             }
             else {
-                %var = ( %var, %{$obj->process( $session )} );
+                %var = ( %var, %{$obj->process} );
             }
         }
         return \%var;

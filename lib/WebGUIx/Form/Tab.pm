@@ -2,10 +2,6 @@ package WebGUIx::Form::Tab;
 
 use Moose;
 
-with 'WebGUIx::Form::Role::HasFields';
-with 'WebGUIx::Form::Role::HasFieldsets';
-with 'WebGUIx::Form::Role::HasTabsets';
-
 has 'name' => (
     is      => 'rw',
     isa     => 'Str',
@@ -17,6 +13,16 @@ has 'label' => (
     lazy    => 1,
     default => sub { return ucfirst shift->name },
 );
+
+has 'session' => (
+    is          => 'ro',
+    isa         => 'WebGUI::Session',
+    required    => 1,
+);
+
+with 'WebGUIx::Form::Role::HasFields';
+with 'WebGUIx::Form::Role::HasFieldsets';
+with 'WebGUIx::Form::Role::HasTabsets';
 
 sub print {
     my ( $self ) = @_;

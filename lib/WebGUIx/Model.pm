@@ -13,6 +13,12 @@ extends qw{ DBIx::Class };
 
 __PACKAGE__->load_components(qw{ VirtualColumns Core });
 
+has 'session' => (
+    is          => 'rw',
+    isa         => 'WebGUI::Session',
+    required    => 1,
+);
+
 =head1 NAME
 
 WebGUIx::Model -- Base class for WebGUIx database tables
@@ -92,7 +98,8 @@ You will need to fill in an action and handle processing yourself.
 
 sub get_edit_form {
     my ( $self ) = @_;
-    my $form    = WebGUIx::Form->new;
+    
+    my $form    = WebGUIx::Form->new( session => $self->session );
    
     no warnings qw{ uninitialized };
     my @attrs   = sort { $a->form->{order} <=> $b->form->{order} }

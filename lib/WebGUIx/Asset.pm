@@ -9,11 +9,6 @@ use WebGUIx::Template::File;
 
 extends 'WebGUIx::Model';
 
-has 'session' => (
-    is      => 'ro',
-    isa     => 'WebGUI::Session',
-);
-
 has 'assetId' => (
     traits  => [qw/ DB Form /],
     is      => 'ro',
@@ -40,6 +35,8 @@ has 'revisionDate' => (
         tab         => 'metadata',
     },
 );
+
+
 
 #----------------------------------------------------------------------------
 
@@ -151,8 +148,6 @@ sub cut {
 }
 
 #----------------------------------------------------------------------------
-#sub delete { ... }
-#----------------------------------------------------------------------------
 
 =head2 duplicate ( properties )
 
@@ -237,7 +232,7 @@ to use.
 
 sub get_current_revision_date {
     my ( $class, $session, $assetId ) = @_;
-    my $schema = $session->{schema};
+    my $schema = $session->{_schema};
     return $schema->resultset('Any')->search(
         {
             assetId     => $assetId,
@@ -282,6 +277,8 @@ override get_edit_form => sub {
     $form->name( "edit_asset" );
 
     # XXX Add Data and Tree relationships
+    my $data_form   = $self->data->get_edit_form;
+    $form->combine( $data_form );
 
     return $form;
 };
@@ -314,7 +311,7 @@ Get the next rank to create a new asset with
 sub get_next_sibling_rank {
     my ( $self ) = @_;
     my $high_rank_child   # Not using get_children in case of old WebGUI assets
-        = $self->session->{schema}->resultset('Tree')->search( {
+        = $self->session->{_schema}->resultset('Tree')->search( {
             parentId    => $self->tree->parentId,
         }, { 
             order_by    => {-desc => 'lineage'},
@@ -342,8 +339,6 @@ sub get_parent {
 }
 
 #----------------------------------------------------------------------------
-#sub get_template_vars { ... }
-#----------------------------------------------------------------------------
 
 =head2 get_url ( params )
 
@@ -360,8 +355,9 @@ If you want a full URL with schema and domain name, use get_url_full().
 
 sub get_url {
     my ( $self, @params ) = @_;
-    
-    my $u   = URI->new_abs( $self->data->url, $self->session->url->gateway );
+    my $gateway = $self->session ? $self->session->url->gateway : "/";
+
+    my $u   = URI->new_abs( $self->data->url, $gateway );
     if ( @params ) {
         $u->query_form( @params, ';' ); # seperate with ;
     }
@@ -457,6 +453,10 @@ sub new {
         $self->tree->lineage( sprintf '%s%06i', $self->get_parent->lineage, $self->tree->rank );
     }
 
+    # Fix missing session
+    $self->data->session( $attr->{session} );
+    $self->tree->session( $attr->{session} );
+
     return $self;
 }
 
@@ -492,8 +492,8 @@ sub paste {
 #----------------------------------------------------------------------------
 
 sub process_edit_form {
-    my ( $self, $session ) = @_;
-    my $var = $self->get_edit_form->process( $session );
+    my ( $self ) = @_;
+    my $var = $self->get_edit_form->process;
     for my $attr ( $self->meta->get_all_attributes ) {
         next unless $attr->does('WebGUIx::Meta::Attribute::Trait::Form');
         next if $attr->form->{field} eq 'Readonly';
@@ -501,7 +501,14 @@ sub process_edit_form {
         $self->$name( $var->{$name} );
     }
 
-    # XXX: Add Data and Tree relationships
+    for my $attr ( $self->data->meta->get_all_attributes ) {
+        next unless $attr->does('WebGUIx::Meta::Attribute::Trait::Form');
+        next if $attr->form->{field} eq 'Readonly';
+        my $name    = $attr->name;
+        $self->data->$name( $var->{$name} );
+    }
+
+    return;
 }
 
 #----------------------------------------------------------------------------
@@ -580,20 +587,48 @@ sub view {
 #----------------------------------------------------------------------------
 
 sub www_add {
-    my ( $self, $session, %args ) = @_
+    my ( $self, %args ) = @_;
+    my $session     = $self->session;
 
+    my $new_class   = $session->form->get('className')
+                    || $session->form->get('class') # old way, bad
+                    ;
+    my $new_asset   = $self->result_source->schema->resultset($new_class)->new({ 
+                        session         => $session,
+                    });
+    my $form        = $new_asset->get_edit_form;
+    $form->action( $self->get_url );
+    $form->add_field( 'Hidden', name => 'func', value => 'add_save', );
+    $form->add_field( 'Hidden', name => 'className', value => $new_class, );
+    $form->add_field( 'Submit', name => 'save', label => 'Create', );
+    my $tmpl        = WebGUIx::Template::File->new( file => 'asset/edit.html' );
+    $tmpl->add_form( $form );
+    $tmpl->var->{asset} = $self;
+    return $tmpl;
 }
 
 #----------------------------------------------------------------------------
-#sub www_add_save { ... }
-#----------------------------------------------------------------------------
-#sub www_copy { ... }
-#----------------------------------------------------------------------------
-#sub www_cut { ... }
+
+sub www_add_save {
+    my ( $self, %args ) = @_;
+
+    my $session     = $self->session;
+    my $new_class   = $session->form->get('className');
+    my $new_asset   = $self->result_source->schema->resultset($new_class)->new({ 
+                        session         => $session,
+                    });
+    $new_asset->process_edit_form;
+    $new_asset = $new_asset->insert;
+
+    my $tmpl    = WebGUIx::Template::File->new( file => 'asset/edit_save.html' );
+    $tmpl->var->{asset} = $new_asset;
+    return $tmpl;
+}
+
 #----------------------------------------------------------------------------
 
 sub www_edit { 
-    my ( $self, $session, %args ) = @_;
+    my ( $self, %args ) = @_;
     my $tmpl    = WebGUIx::Template::File->new( file => 'asset/edit.html' );
     my $form    = $self->get_edit_form;
     $form->action( $self->get_url );
@@ -607,19 +642,16 @@ sub www_edit {
 #----------------------------------------------------------------------------
 
 sub www_edit_save { 
-    my ( $self ) = @_;
+    my ( $self, ) = @_;
     
-    $self->process_edit_form( $self->session );
+    $self->process_edit_form;
     $self->update;
 
-    return sprintf 'Your content has been saved. <a href="%s">Back to View</a>', 
-        $self->get_url;
+    my $tmpl    = WebGUIx::Template::File->new( file => 'asset/edit_save.html' );
+    $tmpl->var->{asset} = $self;
+    return $tmpl;
 }
 
-#----------------------------------------------------------------------------
-#sub www_paste { ... }
-#----------------------------------------------------------------------------
-#sub www_trash { ... } 
 #----------------------------------------------------------------------------
 #sub www_view { ... }
 

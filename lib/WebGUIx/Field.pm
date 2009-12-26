@@ -29,6 +29,12 @@ has 'type' => (
     default => undef,
 );
 
+has 'session' => (
+    is          => 'ro',
+    isa         => 'WebGUI::Session',
+    required    => 1,
+);
+
 =head1 METHODS
 
 #----------------------------------------------------------------------------
@@ -48,15 +54,15 @@ sub get_html {
 
 #----------------------------------------------------------------------------
 
-=head2 get_value ( session )
+=head2 get_value ( )
 
 Get the value from the form.
 
 =cut
 
 sub get_value {
-    my ( $self, $session ) = @_;
-    return $session->form->get( $self->name );
+    my ( $self ) = @_;
+    return $self->session->form->get( $self->name );
 }
 
 #----------------------------------------------------------------------------

@@ -4,6 +4,7 @@ use Moose::Role;
 use WebGUIx::Form::Tabset;
 
 with 'WebGUIx::Form::Role::HasObjects';
+requires 'session';
 
 has 'tabsets' => (
     is      => 'rw',
@@ -14,12 +15,28 @@ has 'tabsets' => (
 sub add_tab {
     my ( $self, %params ) = @_;
     my $tabset_name = delete $params{tabset} || "default";
-    if ( !$self->tabsets->{$tabset_name} ) {
-        $self->tabsets->{$tabset_name} 
-            = WebGUIx::Form::Tabset->new( name => $tabset_name );
-        push @{$self->objects}, $self->tabsets->{$tabset_name};
+    my $tabset  = $self->tabsets->{ $tabset_name };
+    if ( !$tabset ) {
+        $tabset = $self->add_tabset( name => $tabset_name );
     }
-    return $self->tabsets->{$tabset_name}->add_tab( %params );
+    return $tabset->add_tab( %params );
+}
+
+sub add_tabset {
+    my ( $self, @args ) = @_;
+    my $tabset;
+
+    if ( scalar @args == 1 ) {
+        $tabset = $args[0];
+    }
+    else {
+        push @args, session => $self->session;
+        $tabset = WebGUIx::Form::Tabset->new( @args );
+    }
+
+    push @{$self->objects}, $tabset;
+    $self->tabsets->{ $tabset->name } = $tabset;
+    return $tabset;
 }
 
 sub get_tab {

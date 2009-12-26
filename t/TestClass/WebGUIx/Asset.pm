@@ -28,6 +28,16 @@ sub asset_properties {
         },
     };
 }
+sub form_properties {
+    return {
+        title       => 'Edit Form Title',
+        menuTitle   => 'Edit Form Menu Title',
+        url         => 'random_url',
+        groupIdEdit => $WebGUIx::Constant::GROUPID_REGISTERED_USER,
+        groupIdView => $WebGUIx::Constant::GROUPID_EVERYONE,
+        ownerUserId => $WebGUIx::Constant::USERID_ADMIN,
+    };
+}
 
 #----------------------------------------------------------------------------
 
@@ -170,6 +180,7 @@ sub create : Test(startup => 7) {
     } )->as_asset( $self->session );
     
     $self->{asset} = $asset;
+    $asset->session( $self->session );
 }
 
 #----------------------------------------------------------------------------
@@ -292,12 +303,34 @@ sub paste : Test(1) {
 
 #----------------------------------------------------------------------------
 
+sub process_edit_form : Test(1) {
+    my ( $self ) = @_;
+    my $asset   = $self->{asset};
+    my $session = $self->session;
+
+    $session->request->setup_body($self->form_properties);
+    $asset->data->session( $self->session );
+    $asset->tree->session( $self->session );
+    $asset->process_edit_form;
+    
+    # process edit form must not save the asset
+    cmp_deeply(
+        {$asset->get_dirty_columns, $asset->data->get_dirty_columns},
+        $self->form_properties,
+        'dirty columns from process_edit_form',
+    );
+
+    $asset->discard_changes;
+}
+
+#----------------------------------------------------------------------------
+
 sub schema {
     my ( $self ) = @_;
     if ( !$self->{_schema} ) {
         $self->{_schema} 
             = WebGUIx::Asset::Schema->connect( sub { $self->session->db->dbh } );
-        $self->session->{schema} = $self->{_schema};
+        $self->session->{_schema} = $self->{_schema};
     }
     return $self->{_schema};
 }
@@ -310,21 +343,147 @@ sub session {
 
 #----------------------------------------------------------------------------
 
-sub www_edit : Test(1) {
+sub www_add : Test(18) {
     my ( $self ) = @_;
-    ok(1);
-    note( $self->{asset}->www_edit );
+    my $asset   = $self->{asset};
+    my $session = $self->session;
+    $asset->session( $session );
+    $asset->data->session( $session );
+    $asset->tree->session( $session );
+
+    $session->request->setup_body({
+        className       => $self->asset_class,
+    });
+
+    my $tmpl    = $asset->www_add;
+    isa_ok( $tmpl, 'WebGUIx::Template', 'www_add returns template object' );
+    is( $tmpl->file, 'asset/edit.html' );
+    is( $tmpl->var->{asset}, $asset );
+    
+    is( scalar @{$tmpl->forms}, 1, 'template has one form' );
+    my $form = $tmpl->forms->[0];
+    isa_ok( $form, 'WebGUIx::Form' );
+    is( $form->action, $asset->get_url );
+
+    ok( $form->fields->{func}, 'func hidden field exists' );
+    my $field_func = $form->fields->{func};
+    isa_ok( $field_func, 'WebGUIx::Field::Hidden' );
+    is( $field_func->name, 'func', );
+    is( $field_func->value, 'add_save', );
+
+    ok( $form->fields->{save}, 'save submit button exists' );
+    my $field_save = $form->fields->{save};
+    isa_ok( $field_save, 'WebGUIx::Field::Submit' );
+    is( $field_save->name, 'save', );
+    is( $field_save->label, 'Create', );
+
+    ok( $form->fields->{className}, 'className hidden field exists' );
+    my $field_class = $form->fields->{className};
+    isa_ok( $field_class, 'WebGUIx::Field::Hidden' );
+    is( $field_class->name, 'className' );
+    is( $field_class->value, $self->asset_class );
 }
 
 #----------------------------------------------------------------------------
 
-sub www_edit_save : Test(1) {
+sub www_add_save : Tests {
     my ( $self ) = @_;
-    ok(1);
-    $self->session->request->setup_body({
-        content     => 'New',
-    });
-    note( $self->{asset}->www_edit_save );
+    my $session = $self->session;
+    my $asset   = $self->{asset};
+    $asset->session( $session );
+    $asset->data->session( $session );
+    $asset->tree->session( $session );
+
+    my %value   = ( 
+        %{$self->form_properties},
+        className   => $self->asset_class,
+    );
+    $session->request->setup_body(\%value);
+
+    my $tmpl    = $asset->www_add_save;
+    isa_ok( $tmpl, 'WebGUIx::Template', 'www_add_save returns template object' );
+    is( $tmpl->file, 'asset/edit_save.html' );
+    my $new_asset   = $tmpl->var->{asset};
+    isa_ok( $new_asset, $self->asset_class );
+    ok( $new_asset->in_storage, 'new asset is in storage');
+
+    for my $col ( keys %{$self->form_properties} ) {
+        if ( $new_asset->can( $col ) ) {
+            is( $new_asset->$col, $value{$col} );
+        }
+        elsif ( $new_asset->data->can( $col ) ) {
+            is( $new_asset->data->$col, $value{$col} );
+        }
+        else {
+            fail( "$col is not a valid column name" );
+        }
+    }
+}
+
+#----------------------------------------------------------------------------
+
+sub www_edit : Test(14) {
+    my ( $self ) = @_;
+    my $asset   = $self->{asset};
+    my $session = $self->session;
+    $asset->session( $session );
+    $asset->data->session( $session );
+    $asset->tree->session( $session );
+    
+    my $tmpl    = $asset->www_edit;
+    isa_ok( $tmpl, 'WebGUIx::Template', 'www_edit returns template object' );
+    is( $tmpl->file, 'asset/edit.html' );
+    is( $tmpl->var->{asset}, $asset );
+    
+    is( scalar @{$tmpl->forms}, 1, 'template has one form' );
+    my $form = $tmpl->forms->[0];
+    isa_ok( $form, 'WebGUIx::Form' );
+    is( $form->action, $asset->get_url );
+
+    ok( $form->fields->{func}, 'func hidden field exists' );
+    my $field_func = $form->fields->{func};
+    isa_ok( $field_func, 'WebGUIx::Field::Hidden' );
+    is( $field_func->name, 'func', );
+    is( $field_func->value, 'edit_save', );
+
+    ok( $form->fields->{save}, 'save submit button exists' );
+    my $field_save = $form->fields->{save};
+    isa_ok( $field_save, 'WebGUIx::Field::Submit' );
+    is( $field_save->name, 'save', );
+    is( $field_save->label, 'Save', );
+}
+
+#----------------------------------------------------------------------------
+
+sub www_edit_save : Tests {
+    my ( $self ) = @_;
+    my $session = $self->session;
+    my $asset   = $self->{asset};
+    $asset->session( $session );
+    $asset->data->session( $session );
+    $asset->tree->session( $session );
+
+    my %value   = ( 
+        %{$self->form_properties},
+    );
+    $session->request->setup_body(\%value);
+
+    my $tmpl    = $asset->www_edit_save;
+    isa_ok( $tmpl, 'WebGUIx::Template', 'www_edit returns template object' );
+    is( $tmpl->file, 'asset/edit_save.html' );
+    is( $tmpl->var->{asset}, $asset );
+
+    for my $col ( keys %{$self->form_properties} ) {
+        if ( $asset->can( $col ) ) {
+            is( $asset->$col, $value{$col} );
+        }
+        elsif ( $asset->data->can( $col ) ) {
+            is( $asset->data->$col, $value{$col} );
+        }
+        else {
+            fail( "$col is not a valid column name" );
+        }
+    }
 }
 
 1;

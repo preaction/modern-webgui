@@ -4,10 +4,6 @@ package WebGUIx::Form;
 
 use Moose;
 
-with 'WebGUIx::Form::Role::HasFields';
-with 'WebGUIx::Form::Role::HasTabsets';
-with 'WebGUIx::Form::Role::HasFieldsets';
-
 has 'name' => (
     is      => 'rw',
     isa     => 'Str',
@@ -29,6 +25,16 @@ has 'enctype' => (
     isa     => 'Str',
     default => 'multipart/form-data',
 );
+
+has 'session' => (
+    is          => 'ro',
+    isa         => 'WebGUI::Session',
+    required    => 1,
+);
+
+with 'WebGUIx::Form::Role::HasFields';
+with 'WebGUIx::Form::Role::HasTabsets';
+with 'WebGUIx::Form::Role::HasFieldsets';
 
 # More HTML attributes
 
