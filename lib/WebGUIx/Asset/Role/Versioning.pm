@@ -19,20 +19,23 @@ sub add_revision {
     $props{data}{revisionDate}  = $props{revisionDate};
     $props{data}{assetId}       = $props{assetId} || $self->assetId;
 
-    # Create a version tag if necessary
+    # XXX: Create a version tag if necessary
 
     my $new_data        = $self->data->copy( delete $props{data} );
     my $new_revision    = $self->copy( \%props );
     $new_revision->tree( $self->tree );
     $new_revision->data( $new_data );
-    $self->session->log->warn( "SESSION ISA " . ref $self->session );
-    $new_revision->session( $self->session );
-    $new_revision->data->session( $self->session );
 
     return $new_revision;
 }
 
-#sub commit { ... }
+sub commit { 
+    my ( $self ) = @_;
+
+    # XXX: TODO
+
+    return;
+}
 
 #----------------------------------------------------------------------------
 

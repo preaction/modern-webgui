@@ -430,7 +430,7 @@ croak.
 
 sub new {
     my ( $class, $attr ) = @_;
-    my $session = $attr->{session};
+    my $session = $attr->{-result_source}->schema->session;
 
     # Autogenerate missing properties
     $attr->{ assetId                } ||= $session->id->generate;
@@ -445,16 +445,12 @@ sub new {
     $attr->{ data }{ url            } ||= $attr->{ assetId };
     
     my $self = $class->next::method( $attr );
-    
+
     # Generate a rank and lineage based on parent
     if ( $self->tree->lineage eq $self->assetId ) {
         $self->tree->rank( $self->get_next_sibling_rank );
         $self->tree->lineage( sprintf '%s%06i', $self->get_parent->lineage, $self->tree->rank );
     }
-
-    # Fix missing session
-    $self->data->session( $attr->{session} );
-    $self->tree->session( $attr->{session} );
 
     return $self;
 }
@@ -492,6 +488,7 @@ sub paste {
 
 sub process_edit_form {
     my ( $self ) = @_;
+    warn $self;
     my $var = $self->get_edit_form->process;
     for my $attr ( $self->meta->get_all_attributes ) {
         next unless $attr->does('WebGUIx::Meta::Attribute::Trait::Form');
@@ -514,9 +511,9 @@ sub process_edit_form {
 #sub publish { ... }
 #----------------------------------------------------------------------------
 
-=head2 session ( new_session )
+=head2 session ( )
 
-Get or set the WebGUI::Session object attached to this Asset.
+Get the WebGUI::Session object attached to this Asset.
 
 =cut
 
@@ -592,9 +589,7 @@ sub www_add {
     my $new_class   = $session->form->get('className')
                     || $session->form->get('class') # old way, bad
                     ;
-    my $new_asset   = $self->result_source->schema->resultset($new_class)->new({ 
-                        session         => $session,
-                    });
+    my $new_asset   = $self->result_source->schema->resultset($new_class)->new({});
     my $form        = $new_asset->get_edit_form;
     $form->action( $self->get_url );
     $form->add_field( 'Hidden', name => 'func', value => 'add_save', );
@@ -613,9 +608,7 @@ sub www_add_save {
 
     my $session     = $self->session;
     my $new_class   = $session->form->get('className');
-    my $new_asset   = $self->result_source->schema->resultset($new_class)->new({ 
-                        session         => $session,
-                    });
+    my $new_asset   = $self->result_source->schema->resultset($new_class)->new({});
     $new_asset->process_edit_form;
     $new_asset = $new_asset->insert;
 

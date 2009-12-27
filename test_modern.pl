@@ -29,3 +29,10 @@ $new = $new->addRevision( {
 }, time + 1 );
 
 print $new->tree->parentId;
+
+$new->tree->state( "published" );
+$new->data->status( "approved" );
+
+$new->insert;
+$new->tree->insert;
+$new->data->insert;

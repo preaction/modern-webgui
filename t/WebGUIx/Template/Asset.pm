@@ -1,7 +1,8 @@
-package TestClass::WebGUIx::Template::Asset;
+package t::WebGUIx::Template::Asset;
 
 use Moose;
-extends qw{ TestClass::WebGUIx::Asset };
+use Test::Suite;
+extends qw{ t::WebGUIx::Asset };
 
 sub asset_class { return "WebGUIx::Template::Asset"; }
 override form_properties => sub {

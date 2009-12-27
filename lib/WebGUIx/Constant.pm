@@ -2,6 +2,7 @@ package WebGUIx::Constant;
 
 our $ASSETID_ROOT               = "PBasset000000000000001";
 our $ASSETID_IMPORT_NODE        = "PBasset000000000000002";
+our $ASSETID_STYLE_FAILSAFE     = "PBtmpl0000000000000060";
 
 our $GROUPID_REGISTERED_USER    = "2";
 our $GROUPID_ADMIN              = "3";

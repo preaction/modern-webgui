@@ -8,16 +8,11 @@ use WebGUIx::Field;
 use WebGUIx::Form;
 use WebGUIx::Meta::Attribute::Trait::DB;
 use WebGUIx::Meta::Attribute::Trait::Form;
+use Carp qw(confess);
 
 extends qw{ DBIx::Class };
 
-__PACKAGE__->load_components(qw{ VirtualColumns Core });
-
-has 'session' => (
-    is          => 'rw',
-    isa         => 'WebGUI::Session',
-    required    => 1,
-);
+__PACKAGE__->load_components(qw{ Core });
 
 =head1 NAME
 
@@ -99,7 +94,10 @@ You will need to fill in an action and handle processing yourself.
 sub get_edit_form {
     my ( $self ) = @_;
     
-    $self->session->log->warn( "SESSION ISA " . ref $self->session );
+    if ( !$self->session ) {
+        confess "I don't have a session!";
+    }
+
     my $form    = WebGUIx::Form->new( session => $self->session );
    
     no warnings qw{ uninitialized };
@@ -136,6 +134,13 @@ sub get_edit_form {
     }
 
     return $form;
+}
+
+#----------------------------------------------------------------------------
+
+sub session {
+    my ( $self ) = @_;
+    return $self->result_source->schema->session;
 }
 
 #----------------------------------------------------------------------------

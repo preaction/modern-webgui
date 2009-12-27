@@ -1,7 +1,7 @@
-package TestClass::WebGUIx::Asset::Role::Versioning;
+package t::WebGUIx::Asset::Role::Versioning;
 
 use Moose::Role;
-use base 'Test::Class';
+use Test::Sweet;
 
 around asset_properties => sub {
     my ( $orig ) = @_;
@@ -10,8 +10,7 @@ around asset_properties => sub {
     return $p;
 };
 
-sub add_revision : Tests(5) {
-    my ( $self ) = @_;
+test add_revision {
     my $asset   = $self->{asset};
     my $new_revision = $asset->add_revision;
     isa_ok( $new_revision, ref $asset );

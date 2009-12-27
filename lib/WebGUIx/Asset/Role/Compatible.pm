@@ -9,7 +9,7 @@ with 'WebGUIx::Asset::Role::Versioning';
 sub _caller_is_old {
     my $i = 1;
     while ( my ( $package, @ignore ) = caller( $i ) ) {
-        return 1 if $package eq "WebGUI::Content::Asset";
+        return 1 if $package =~ "^WebGUI::";
         $i++;
     }
     return 0;
@@ -143,10 +143,13 @@ sub hasChildren {
 
 around new => sub {
     my ( $orig, $class, @args ) = @_;
-    
+
     # Being called by old WebGUI
     if ( _caller_is_old() && ref $args[0] eq 'WebGUI::Session' ) {
         my ( $session, $assetId, $className, $revisionDate ) = @args;
+
+        use Carp qw(longmess);
+        $session->log->info( "Called by: " . longmess() );
 
         my $schema;
         unless ( $schema = $session->{_schema} ) {
@@ -176,6 +179,10 @@ sub newByPropertyHashRef {
     delete $hashref->{encryptPage}; # XXX: Add later
     delete $hashref->{printableStyleTemplateId};
     delete $hashref->{isHidden}; # XXX: Add later
+
+    use Data::Dumper; use Carp qw( longmess );
+    $session->log->warn( "HASHREF: " . Dumper $hashref );
+    $session->log->warn( "FROM: " . longmess );
 
     # Fix the hashref
     $hashref->{ data } = {};
@@ -217,6 +224,7 @@ sub processPropertiesFromFormPost {
     $self->process_edit_form;
     if ( !$self->in_storage ) {
         $self->insert;
+        $self->tree->insert;
     }
     else {
         $self->update;
