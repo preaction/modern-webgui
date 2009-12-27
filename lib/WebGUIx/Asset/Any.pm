@@ -2,6 +2,7 @@ package WebGUIx::Asset::Any;
 
 use Moose;
 extends qw{ WebGUIx::Model };
+use WebGUIx::Constant;
 
 has 'assetId' => (
     traits  => [qw/ DB /],
@@ -50,6 +51,8 @@ has 'url' => (
         field       => 'Text',
         tab         => 'properties',
     },
+    lazy        => 1,
+    default     => sub { $_[0]->assetId },
 );
 
 has 'groupIdView' => (
@@ -63,6 +66,7 @@ has 'groupIdView' => (
         field       => 'Group',
         tab         => 'security',
     },
+    default     => $WebGUIx::Constant::GROUPID_EVERYONE,
 );
 
 has 'groupIdEdit' => (
@@ -76,6 +80,7 @@ has 'groupIdEdit' => (
         field       => 'Group',
         tab         => 'security',
     },
+    default     => $WebGUIx::Constant::GROUPID_TURN_ADMIN_ON,
 );
 
 has 'synopsis' => (
@@ -99,6 +104,8 @@ has 'ownerUserId' => (
         field       => 'User',
         tab         => 'security',
     },
+    lazy        => 1,
+    default     => sub { $_[0]->session->user->userId },
 );
 
 has 'status' => (

@@ -83,6 +83,7 @@ sub can_add : Test(7) {
     my $asset   = $self->{asset};
     my $session = $self->session;
     my ( $config ) = $session->quick(qw( config ));
+    my $class   = ref $asset;
 
     # Store config
     WebGUI::Test->originalConfig( "assets/" . $self->asset_class . "/addGroup" );
@@ -93,20 +94,20 @@ sub can_add : Test(7) {
         $WebGUIx::Constant::GROUPID_REGISTERED_USER,
     );
     $session->user({ user => $self->{user}->{admin} });
-    ok( $asset->can_add(), "Admin can_add as default" );
-    ok( $asset->can_add( $self->{user}->{normal} ), "Normal user can_add as argument" );
-    ok( !$asset->can_add( $self->{user}->{visitor}->getId ), "Visitor cannot add as userId" );
+    ok( $class->can_add($session), "Admin can_add as default" );
+    ok( $class->can_add( $session, $self->{user}->{normal} ), "Normal user can_add as argument" );
+    ok( !$class->can_add( $session, $self->{user}->{visitor}->getId ), "Visitor cannot add as userId" );
 
     ### Test without config (turn admin on)
     $config->delete( 
         "assets/" . $self->asset_class . "/addGroup", 
     );
-    ok( $asset->can_add( $self->{user}->{admin} ), "Admin can_add as user" );
-    ok( !$asset->can_add( $self->{user}->{normal}->getId ), "Normal user cannot add as userId" );
+    ok( $class->can_add( $session, $self->{user}->{admin} ), "Admin can_add as user" );
+    ok( !$class->can_add( $session, $self->{user}->{normal}->getId ), "Normal user cannot add as userId" );
     $session->user({ user => $self->{user}->{visitor} });
-    ok( !$asset->can_add(), "Visitor cannot add as default" );
+    ok( !$class->can_add($session), "Visitor cannot add as default" );
     $self->{user}->{normal}->addToGroups([ $WebGUIx::Constant::GROUPID_TURN_ADMIN_ON ]);
-    ok( $asset->can_add( $self->{user}->{normal} ), "Normal user can add when in turn admin on group" );
+    ok( $class->can_add( $session, $self->{user}->{normal} ), "Normal user can add when in turn admin on group" );
     $self->{user}->{normal}->deleteFromGroups([ $WebGUIx::Constant::GROUPID_TURN_ADMIN_ON ]);
 
 }

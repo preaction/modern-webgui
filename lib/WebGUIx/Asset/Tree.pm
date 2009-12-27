@@ -5,9 +5,24 @@ extends qw{ WebGUIx::Model };
 
 __PACKAGE__->load_components(qw{ Ordered });
 
+has 'parentId' => (
+    traits  => [qw/ DB /],
+    is      => 'rw',
+    isa     => 'Str',
+    db      => {
+        size        => 22,
+    },
+);
+
+has 'className' => (
+    traits  => [qw/ DB /],
+    is      => 'rw',
+    isa     => 'Str',
+);
+
 __PACKAGE__->table( 'asset' );
 __PACKAGE__->add_columns(qw{
-    assetId className state parentId rank lineage creationDate
+    assetId state rank lineage creationDate
 });
 __PACKAGE__->set_primary_key( 'assetId' );
 __PACKAGE__->position_column( 'rank' );

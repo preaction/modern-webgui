@@ -40,7 +40,7 @@ has 'revisionDate' => (
 
 #----------------------------------------------------------------------------
 
-=head2 can_add ( ?user|userId )
+=head2 can_add ( session, ?user|userId )
 
 Returns true if the user is allowed to add this asset to the current asset. 
 The user is allowed to add this asset if they are in the C<addGroup> of the
@@ -52,10 +52,8 @@ The user defaults to the current user if none is provided.
 =cut
 
 sub can_add { 
-    my ( $self, $user ) = @_;
+    my ( $class, $session, $user ) = @_;
     
-    my $session = $self->session;
-
     if ( !$user ) {
         # Default to current user
         $user       = $session->user;
@@ -65,7 +63,7 @@ sub can_add {
         $user       = WebGUI::User->new( $session, $user );
     }
     
-    my $group_id = $session->config->get("assets/" . $self->tree->className . "/addGroup")
+    my $group_id = $session->config->get("assets/" . $class . "/addGroup")
                 || $WebGUIx::Constant::GROUPID_TURN_ADMIN_ON
                 ;
 
@@ -273,6 +271,7 @@ sub get_descendants {
 
 override get_edit_form => sub { 
     my ( $self ) = @_;
+    $self->session->log->warn( "OUR SESSION ISA " . ref $self->session );
     my $form = super();
     $form->name( "edit_asset" );
 
@@ -653,7 +652,11 @@ sub www_edit_save {
 }
 
 #----------------------------------------------------------------------------
-#sub www_view { ... }
+
+sub www_view {
+    my ( $self ) = @_;
+    return $self->view;
+}
 
 1;
 

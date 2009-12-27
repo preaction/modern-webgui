@@ -2,7 +2,6 @@ package WebGUIx::Asset::RawContent;
 
 use Moose;
 extends qw{ WebGUIx::Asset };
-with 'WebGUIx::Asset::Role::Versioning';
 with 'WebGUIx::Asset::Role::Compatible';
 
 has 'content' => (

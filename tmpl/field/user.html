@@ -1,0 +1,7 @@
+<select name="[% field.name %]">
+[% FOR user IN users %]
+    <option value="[% user.userId %]" [% IF field.value == user.userId %]selected="selected"[% END %]>
+        [% user.username %]
+    </option>
+[% END %]
+</select>

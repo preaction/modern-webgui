@@ -1,0 +1,7 @@
+<select name="[% field.name %]">
+[% FOR group IN groups %]
+    <option value="[% group.groupId %]" [% IF field.value == group.groupId %]selected="selected"[% END %]>
+        [% group.groupName %]
+    </option>
+[% END %]
+</select>

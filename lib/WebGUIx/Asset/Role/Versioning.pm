@@ -14,13 +14,21 @@ revision.
 
 
 sub add_revision { 
-    my ( $self ) = @_;
-    my $revision_date   = time;
+    my ( $self, %props ) = @_;
+    $props{revisionDate} ||= time;
+    $props{data}{revisionDate}  = $props{revisionDate};
+    $props{data}{assetId}       = $props{assetId} || $self->assetId;
 
     # Create a version tag if necessary
 
-    $self->data->copy( { revisionDate => $revision_date } );
-    my $new_revision    = $self->copy( { revisionDate => $revision_date } );
+    my $new_data        = $self->data->copy( delete $props{data} );
+    my $new_revision    = $self->copy( \%props );
+    $new_revision->tree( $self->tree );
+    $new_revision->data( $new_data );
+    $self->session->log->warn( "SESSION ISA " . ref $self->session );
+    $new_revision->session( $self->session );
+    $new_revision->data->session( $self->session );
+
     return $new_revision;
 }
 

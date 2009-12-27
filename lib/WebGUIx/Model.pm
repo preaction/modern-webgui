@@ -99,6 +99,7 @@ You will need to fill in an action and handle processing yourself.
 sub get_edit_form {
     my ( $self ) = @_;
     
+    $self->session->log->warn( "SESSION ISA " . ref $self->session );
     my $form    = WebGUIx::Form->new( session => $self->session );
    
     no warnings qw{ uninitialized };
@@ -157,12 +158,15 @@ sub table {
     my @primary_key = ();
     for my $attr ( $meta->get_all_attributes ) {
         if ( $attr->does('WebGUIx::Meta::Attribute::Trait::DB') ) {
-            $class->add_column( $attr->name );
+            $class->add_column( $attr->name => {
+                default_value   => $attr->default,   
+            });
             if ( $attr->db && $attr->db->{primary_key} ) {
                 push @primary_key, $attr->name;
             }
         }
         else {
+            warn "$class adding " . $attr->name;
             $class->add_virtual_column( $attr->name );
         }
     } 
