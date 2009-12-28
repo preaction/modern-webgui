@@ -172,7 +172,7 @@ sub table {
         }
         else {
             warn "$class adding " . $attr->name;
-            $class->add_virtual_column( $attr->name );
+            $class->mk_group_accessors( simple => $attr->name );
         }
     } 
     if ( @primary_key ) {

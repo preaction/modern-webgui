@@ -271,7 +271,6 @@ sub get_descendants {
 
 override get_edit_form => sub { 
     my ( $self ) = @_;
-    $self->session->log->warn( "OUR SESSION ISA " . ref $self->session );
     my $form = super();
     $form->name( "edit_asset" );
 
@@ -488,7 +487,6 @@ sub paste {
 
 sub process_edit_form {
     my ( $self ) = @_;
-    warn $self;
     my $var = $self->get_edit_form->process;
     for my $attr ( $self->meta->get_all_attributes ) {
         next unless $attr->does('WebGUIx::Meta::Attribute::Trait::Form');

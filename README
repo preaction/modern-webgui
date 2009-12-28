@@ -2,12 +2,11 @@ In order to install / run the test suite you'll need:
 *) Perl 5.10.1 
 *) Moose
 *) DBIx::Class
-*) DBIx::Class::VirtualColumns
 *) DBIx::Class::Ordered
-*) Test::Class
+*) Test::Sweet
 
 You'll also need to edit your WebGUI site's schema:
-*) ALTER TABLE asset ADD COLUMN rank BIGINT
+*) mysql < docs/install.sql
 
 To run the test suite, do:
 

@@ -164,7 +164,6 @@ around new => sub {
             revisionDate    => $revisionDate,
         });
         my $asset   = $row->as_asset;
-        $asset->session( $session );
         return $asset;
     }
 
@@ -206,10 +205,8 @@ sub newByPropertyHashRef {
                 = WebGUIx::Asset::Schema->connect( sub { $session->db->dbh } );
     }
     my $asset = $session->{_schema}->resultset($class)->new({ 
-        session         => $session,
         %{ $hashref },
     });
-    $asset->session( $session );
 
     $session->log->warn( "SESSION ISA " . ref $session );
 

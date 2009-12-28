@@ -15,12 +15,12 @@ revision.
 
 sub add_revision { 
     my ( $self, %props ) = @_;
-    $props{revisionDate} ||= time;
+    $props{revisionDate} ||= time+2;
     $props{data}{revisionDate}  = $props{revisionDate};
     $props{data}{assetId}       = $props{assetId} || $self->assetId;
 
     # XXX: Create a version tag if necessary
-
+    
     my $new_data        = $self->data->copy( delete $props{data} );
     my $new_revision    = $self->copy( \%props );
     $new_revision->tree( $self->tree );

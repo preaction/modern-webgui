@@ -41,7 +41,7 @@ test newByPropertyHashRef {
         assetId                     => "new",
         url                         => $self->session->id->generate,
     );
-    my $new_asset = $self->asset_class->newByPropertyHashRef($self->session,\%properties);
+    my $new_asset = $self->asset_class->newByPropertyHashRef($self->session, {%properties});
 
     isa_ok( $new_asset, $self->asset_class );
     ok( !$new_asset->in_storage );

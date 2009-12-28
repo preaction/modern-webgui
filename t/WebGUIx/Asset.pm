@@ -96,10 +96,6 @@ test create {
     $DB::single = 1;
     my $asset   = $self->schema->resultset($self->asset_class)->create($self->asset_properties);
     
-    warn $asset->session;
-    warn $asset->tree->session;
-    warn $asset->data->session;
-
     isa_ok( $asset, $self->asset_class );
     isa_ok( $asset, 'WebGUIx::Asset', 'asset' );
     like( $asset->assetId, qr/[a-zA-Z0-9_-]{22}/,
@@ -211,6 +207,8 @@ test duplicate {
     my $asset       = $self->{asset};
     my $copy        = $asset->duplicate;
 
+    # XXX: This randomly fails... WHY
+
     isnt( $asset->assetId, $copy->assetId, 'copy has new id' );
     isnt( $asset->tree->assetId, $copy->tree->assetId, 'copy has new id' );
     isnt( $asset->data->assetId, $copy->data->assetId, 'copy has new id' );
@@ -301,9 +299,6 @@ test has_children {
 test process_edit_form {
     my $asset   = $self->{asset};
     my $session = $self->session;
-
-    warn $asset;
-    warn $asset->data->session;
 
     $session->request->setup_body($self->form_properties);
     $asset->process_edit_form;
